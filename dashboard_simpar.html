@@ -449,7 +449,7 @@ window.ChartDataLabels={};
       <div><strong>Última atualização</strong><span class="upd-time">30/04/2026 15:54:57</span></div>
     </div>
     <span id="srv-badge" style="display:none;font-size:.65rem;font-weight:600;padding:3px 8px;border-radius:20px;margin-right:4px"></span>
-    <button class="btn-ref" id="btn-atualizar" onclick="atualizarDados()" title="Atualizar dados (offline — lê arquivo Skore exportado)">
+    <button class="btn-ref" id="btn-atualizar" onclick="atualizarDados()" title="Atualizar dados" style="display:none">
       <svg id="ico-ref" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
     </button>
   </div>
@@ -2756,6 +2756,15 @@ async function atualizarDados(){
 function fecharModal(){
   document.getElementById('modal-upd').style.display = 'none';
 }
+
+// Mostra botão Recarregar só quando rodando local (não no GitHub Pages)
+(function(){
+  const local = /localhost|127\.0\.0\.1/.test(window.location.hostname);
+  const btn   = document.getElementById('btn-atualizar');
+  const badge = document.getElementById('srv-badge');
+  if(local && btn) btn.style.display = 'inline-flex';
+  if(!local && badge) badge.style.display = 'none';
+})();
 
 // Animação de giro
 const _sty = document.createElement('style');
