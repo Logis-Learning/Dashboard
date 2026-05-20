@@ -1,0 +1,20 @@
+# Credenciais — NUNCA subir para o GitHub
+config.py
+
+# Dados sensíveis de colaboradores
+input/Ativos.xlsx
+input/biblioteca_colaboradores.xlsx
+input/relatorios_skore/
+
+# Saídas geradas localmente
+output_powerbi/relatorio_matriculas.xlsx
+output_powerbi/skore_resultado.csv
+output_powerbi/skore_resultado.json
+
+# Arquivos obsoletos e temporários
+obsoleto/
+__pycache__/
+*.pyc
+*.log
+*.err
+.claude/

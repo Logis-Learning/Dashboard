@@ -1,0 +1,2978 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Treinamentos | Universidade SIMPAR</title>
+  <script>
+/* ── Mini Chart Engine (sem dependência de CDN) ─────────────────────── */
+(function(){
+if(typeof Chart!=='undefined')return;
+const TAU=Math.PI*2;
+function _sz(cv){const p=cv.parentElement;if(!p)return;cv.width=p.clientWidth||300;cv.height=p.clientHeight||200;}
+function _txt(ctx,txt,x,y,o){
+  ctx.save();ctx.font=(o.bold?'700 ':'normal ')+(o.size||11)+"px 'Segoe UI',sans-serif";
+  ctx.fillStyle=o.color||'#334155';ctx.textAlign=o.align||'left';ctx.textBaseline=o.base||'middle';
+  ctx.fillText(String(txt),x,y);ctx.restore();
+}
+function _col(c,i){return Array.isArray(c)?c[i%c.length]:c;}
+function _rr(ctx,x,y,w,h,r){
+  r=Math.min(r,w/2,h/2);
+  ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.arcTo(x+w,y,x+w,y+r,r);
+  ctx.lineTo(x+w,y+h-r);ctx.arcTo(x+w,y+h,x+w-r,y+h,r);
+  ctx.lineTo(x+r,y+h);ctx.arcTo(x,y+h,x,y+h-r,r);
+  ctx.lineTo(x,y+r);ctx.arcTo(x,y,x+r,y,r);ctx.closePath();
+}
+/* ── DONUT ── */
+function drawDoughnut(cv,data,opts){
+  _sz(cv);const ctx=cv.getContext('2d'),W=cv.width,H=cv.height;
+  const legO=opts.plugins?.legend,lbO=legO?.labels||{},showLeg=legO?.display!==false,legPos=legO?.position||'top';
+  const fs=lbO.font?.size||10,bw=lbO.boxWidth||12,pad=lbO.padding||8;
+  let cX=W/2,cY=H/2,R=Math.min(W,H)/2*0.82;
+  if(showLeg){if(legPos==='right'){cX=W*0.36;R=Math.min(W*0.62,H)/2*0.82;}
+    else if(legPos==='bottom'){cY=H*0.41;R=Math.min(W,H*0.70)/2*0.82;}}
+  const cut=parseFloat(opts.cutout||'50%')/100,ri=R*cut;
+  const ds=data.datasets[0],vals=ds.data,total=vals.reduce((a,b)=>a+(b||0),0)||1;
+  let ang=-Math.PI/2;
+  vals.forEach((v,i)=>{
+    const sw=(v||0)/total*TAU;
+    ctx.beginPath();ctx.arc(cX,cY,R,ang,ang+sw);ctx.arc(cX,cY,ri,ang+sw,ang,true);ctx.closePath();
+    ctx.fillStyle=_col(ds.backgroundColor,i);ctx.fill();
+    if(ds.borderWidth){ctx.strokeStyle=ds.borderColor||'#fff';ctx.lineWidth=ds.borderWidth;ctx.stroke();}
+    const dlO=opts.plugins?.datalabels;
+    if(dlO?.display!==false&&(v/total)>0.05){
+      const mid=ang+sw/2,lr=(R+ri)/2;
+      const fv=dlO?.formatter?dlO.formatter(v,{dataset:ds,dataIndex:i,datasetIndex:0}):(v/total*100).toFixed(1)+'%';
+      _txt(ctx,fv,cX+Math.cos(mid)*lr,cY+Math.sin(mid)*lr,{bold:true,size:dlO?.font?.size||10,color:'#fff',align:'center',base:'middle'});
+    }
+    ang+=sw;
+  });
+  if(showLeg&&data.labels){
+    if(legPos==='right'){
+      let lY=cY-data.labels.length*(fs+pad)/2+fs/2;
+      data.labels.forEach((l,i)=>{ctx.fillStyle=_col(ds.backgroundColor,i);ctx.fillRect(cX+R+10,lY-bw/2,bw,bw);
+        _txt(ctx,l,cX+R+10+bw+5,lY,{size:fs,color:lbO.color||'#64748b'});lY+=fs+pad;});
+    }else if(legPos==='bottom'){
+      let lX=10,lY=cY+R+8;
+      data.labels.forEach((l,i)=>{
+        ctx.fillStyle=_col(ds.backgroundColor,i);ctx.fillRect(lX,lY,bw,bw);
+        const tw=ctx.measureText(String(l)).width;
+        _txt(ctx,l,lX+bw+4,lY+bw/2,{size:fs,color:lbO.color||'#64748b'});
+        lX+=bw+4+tw+pad*2;if(lX>W-60){lX=10;lY+=fs+pad+2;}
+      });
+    }
+  }
+}
+/* ── HORIZONTAL BAR ── */
+function drawHBar(cv,data,opts){
+  _sz(cv);const ctx=cv.getContext('2d'),W=cv.width,H=cv.height;
+  const labels=data.labels,ds=data.datasets[0],vals=ds.data,n=labels.length;
+  const xSc=opts.scales?.x||{},ySc=opts.scales?.y||{},dlO=opts.plugins?.datalabels;
+  ctx.font="10px 'Segoe UI',sans-serif";
+  const maxLW=Math.max(...labels.map(l=>{const s=Array.isArray(l)?l.join(' '):String(l);return ctx.measureText(s).width;}),40);
+  const padL=Math.min(maxLW+12,W*0.38),padR=opts.layout?.padding?.right||48,padT=8,padB=22;
+  const chartW=W-padL-padR,chartH=H-padT-padB,slotH=chartH/n,barH=Math.min(slotH*0.65,28);
+  const maxV=xSc.max??(Math.max(...vals.filter(v=>v!=null))*1.15||100),minV=xSc.min??0,range=maxV-minV||1;
+  ctx.strokeStyle=xSc.grid?.color||'#f0f4f8';ctx.lineWidth=1;
+  [0,0.25,0.5,0.75,1].forEach(t=>{
+    const x=padL+t*chartW;ctx.beginPath();ctx.moveTo(x,padT);ctx.lineTo(x,H-padB);ctx.stroke();
+    const vt=minV+t*range,tcb=xSc.ticks?.callback;
+    _txt(ctx,tcb?tcb(vt,0):vt.toFixed(0),x,H-padB+11,{size:9,color:'#64748b',align:'center'});
+  });
+  vals.forEach((v,i)=>{
+    v=v||0;const y=padT+slotH*i+(slotH-barH)/2;
+    const bW=Math.max(((v-minV)/range)*chartW,1);
+    const br=Math.min(ds.borderRadius||0,barH/2,bW/2);
+    ctx.fillStyle=_col(ds.backgroundColor,i);
+    if(br){_rr(ctx,padL,y,bW,barH,br);}else{ctx.beginPath();ctx.rect(padL,y,bW,barH);}
+    ctx.fill();
+    const lbl=Array.isArray(labels[i])?labels[i].join(' '):String(labels[i]);
+    const ls=lbl.length>24?lbl.substring(0,22)+'…':lbl;
+    _txt(ctx,ls,padL-6,y+barH/2,{size:ySc.ticks?.font?.size||10,color:'#64748b',align:'right'});
+    if(dlO?.display!==false){
+      const fv=dlO?.formatter?dlO.formatter(v,{dataIndex:i,dataset:ds,datasetIndex:0}):v;
+      _txt(ctx,String(fv),padL+bW+(dlO?.offset||6),y+barH/2,{bold:true,size:dlO?.font?.size||11,color:dlO?.color||'#64748b',align:'left'});
+    }
+  });
+}
+/* ── VERTICAL BAR (stacked & plain) ── */
+function drawVBar(cv,data,opts){
+  _sz(cv);const ctx=cv.getContext('2d'),W=cv.width,H=cv.height;
+  const labels=data.labels,dsets=data.datasets,n=labels.length;
+  const stacked=!!(opts.scales?.x?.stacked||opts.scales?.y?.stacked||dsets.some(d=>d.stack));
+  const dlO=opts.plugins?.datalabels,legO=opts.plugins?.legend,lbO=legO?.labels||{};
+  const padT=opts.layout?.padding?.top||(legO?.display!==false&&dsets.length>1?22:14);
+  const padB=40,padL=32,padR=8;
+  const totals=labels.map((_,i)=>dsets.reduce((s,ds)=>s+(ds.data[i]||0),0));
+  const maxV=Math.max(...totals)*1.15||10,chartW=W-padL-padR,chartH=H-padT-padB;
+  const slotW=chartW/n,barW=Math.min(slotW*0.6,50);
+  ctx.strokeStyle='#f0f4f8';ctx.lineWidth=1;
+  [0,0.25,0.5,0.75,1].forEach(t=>{
+    const y=padT+t*chartH;ctx.beginPath();ctx.moveTo(padL,y);ctx.lineTo(W-padR,y);ctx.stroke();
+    _txt(ctx,(maxV*(1-t)).toFixed(0),padL-4,y,{size:9,color:'#64748b',align:'right'});
+  });
+  if(legO?.display!==false&&dsets.length>1){
+    let lx=padL;
+    dsets.forEach(ds=>{ctx.fillStyle=_col(ds.backgroundColor,0);ctx.fillRect(lx,6,10,10);
+      _txt(ctx,ds.label||'',lx+13,11,{size:lbO.font?.size||10,color:lbO.color||'#64748b'});
+      lx+=13+ctx.measureText(ds.label||'').width+14;});
+  }
+  labels.forEach((lbl,i)=>{
+    const cx=padL+slotW*i+(slotW-barW)/2;let yBase=H-padB;
+    const totalH=(totals[i]/maxV)*chartH;
+    dsets.forEach((ds,di)=>{
+      const v=ds.data[i]||0,bH=(v/maxV)*chartH,isLast=di===dsets.length-1;
+      const br=isLast?(typeof ds.borderRadius==='object'?ds.borderRadius.topLeft||0:ds.borderRadius||0):0;
+      const y=yBase-bH;
+      ctx.fillStyle=_col(ds.backgroundColor,i);
+      if(br&&bH>br){_rr(ctx,cx,y,barW,bH,br);}else{ctx.beginPath();ctx.rect(cx,y,barW,Math.max(bH,1));}
+      ctx.fill();
+      if(stacked)yBase-=bH;
+      if(dlO&&isLast){
+        const show=typeof dlO.display==='function'?dlO.display({datasetIndex:di,dataIndex:i}):(dlO.display!==false);
+        if(show){
+          const topY=stacked?H-padB-totalH:y;
+          const fv=dlO.formatter?dlO.formatter(v,{dataIndex:i,dataset:ds,datasetIndex:di}):v;
+          _txt(ctx,String(fv),cx+barW/2,topY-(dlO.offset||8),{bold:true,size:dlO.font?.size||11,color:typeof dlO.color==='function'?dlO.color({dataset:ds}):dlO.color||'#334155',align:'center'});
+        }
+      }
+    });
+    const la=Array.isArray(lbl)?lbl:[String(lbl)];
+    la.forEach((line,li)=>_txt(ctx,line,padL+slotW*i+slotW/2,H-padB+10+li*11,{size:9,color:'#64748b',align:'center'}));
+  });
+}
+/* ── LINE ── */
+function drawLine(cv,data,opts){
+  _sz(cv);const ctx=cv.getContext('2d'),W=cv.width,H=cv.height;
+  const labels=data.labels,dsets=data.datasets,n=labels.length;
+  const legO=opts.plugins?.legend,lbO=legO?.labels||{},dlO=opts.plugins?.datalabels;
+  const padT=28,padB=28,padL=36,padR=16;
+  const allV=dsets.flatMap(ds=>ds.data.filter(v=>v!=null)),maxV=Math.max(...allV)*1.15||10;
+  const chartW=W-padL-padR,chartH=H-padT-padB,span=Math.max(n-1,1);
+  ctx.strokeStyle='#f0f4f8';ctx.lineWidth=1;
+  [0,0.25,0.5,0.75,1].forEach(t=>{
+    const y=padT+t*chartH;ctx.beginPath();ctx.moveTo(padL,y);ctx.lineTo(W-padR,y);ctx.stroke();
+    _txt(ctx,(maxV*(1-t)).toFixed(0),padL-4,y,{size:9,color:'#64748b',align:'right'});
+  });
+  if(legO?.display!==false){
+    let lx=padL;
+    dsets.forEach(ds=>{ctx.beginPath();ctx.arc(lx+4,12,4,0,TAU);ctx.fillStyle=ds.borderColor;ctx.fill();
+      _txt(ctx,ds.label||'',lx+11,12,{size:lbO.font?.size||9,color:lbO.color||'#64748b'});
+      lx+=11+ctx.measureText(ds.label||'').width+12;});
+  }
+  dsets.forEach(ds=>{
+    const pts=ds.data;
+    const xP=pts.map((_,i)=>padL+i*(chartW/span)),yP=pts.map(v=>padT+chartH*(1-(v||0)/maxV));
+    ctx.beginPath();xP.forEach((x,i)=>i===0?ctx.moveTo(x,yP[i]):ctx.lineTo(x,yP[i]));
+    ctx.strokeStyle=ds.borderColor;ctx.lineWidth=ds.borderWidth||2;ctx.stroke();
+    xP.forEach((x,i)=>{ctx.beginPath();ctx.arc(x,yP[i],ds.pointRadius||3,0,TAU);ctx.fillStyle=ds.pointBackgroundColor||ds.borderColor;ctx.fill();});
+    if(dlO?.display!==false){
+      xP.forEach((x,i)=>{
+        const show=typeof dlO.display==='function'?dlO.display({dataIndex:i,dataset:ds,datasetIndex:dsets.indexOf(ds)}):true;
+        if(!show)return;
+        const col=typeof dlO.color==='function'?dlO.color({dataset:ds}):dlO.color;
+        _txt(ctx,String(pts[i]||''),x,yP[i]-(dlO.offset||10),{bold:true,size:dlO.font?.size||10,color:col||'#334155',align:'center'});
+      });
+    }
+  });
+  const tcb=opts.scales?.x?.ticks?.callback;
+  labels.forEach((l,i)=>{
+    const x=padL+i*(chartW/span),show=tcb?tcb(l,i)!==undefined:i%2===0;
+    if(show)_txt(ctx,String(l),x,H-padB+10,{size:9,color:'#64748b',align:'center'});
+  });
+}
+window.Chart=function(cv,cfg){
+  if(!cv)return{destroy:()=>{},update:()=>{}};
+  const chart = {
+    type: cfg.type,
+    data: cfg.data || {labels:[],datasets:[]},
+    options: cfg.options || {},
+    update(){
+      const ctx=cv.getContext('2d');
+      ctx.clearRect(0,0,cv.width,cv.height);
+      if(this.type==='doughnut'||this.type==='pie')drawDoughnut(cv,this.data,this.options);
+      else if(this.type==='bar'&&this.options?.indexAxis==='y')drawHBar(cv,this.data,this.options);
+      else if(this.type==='bar')drawVBar(cv,this.data,this.options);
+      else if(this.type==='line')drawLine(cv,this.data,this.options);
+    },
+    destroy(){
+      const ctx=cv.getContext('2d');
+      ctx.clearRect(0,0,cv.width,cv.height);
+    }
+  };
+  chart.update();
+  return chart;
+};
+Chart.register=function(){};
+window.ChartDataLabels={};
+})();
+  </script>
+  <!-- Dados reais gerados por gerar_dados_dash.py -->
+  <script src="dados.js" onerror="console.warn('dados.js não encontrado')"></script>
+  <style>
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+    :root {
+      --bd:#1e3a5f; --blue:#2563eb; --green:#16a34a; --orange:#ea580c;
+      --red:#dc2626; --purple:#7c3aed; --pink:#db2777; --indigo:#4338ca;
+      --g50:#f8fafc; --g100:#f1f5f9; --g200:#e2e8f0; --g400:#94a3b8;
+      --g500:#64748b; --g700:#334155; --white:#fff;
+      --sh:0 1px 4px rgba(0,0,0,.07),0 1px 2px rgba(0,0,0,.04);
+      --r:12px; --rs:8px; --hh:60px; --tn:42px; --sw:180px;
+      --off:102px;
+    }
+    body { font-family:'Segoe UI',system-ui,sans-serif; background:var(--g100); color:var(--g700); font-size:13px; }
+
+    /* HEADER */
+    .hdr { position:fixed; top:0; left:0; right:0; height:var(--hh); background:var(--white); border-bottom:1px solid var(--g200); display:flex; align-items:center; justify-content:space-between; padding:0 20px; z-index:300; box-shadow:0 1px 6px rgba(0,0,0,.06); }
+    .hdr-l { display:flex; align-items:center; gap:14px; }
+    .logo { width:44px; height:44px; background:var(--bd); border-radius:10px; display:flex; align-items:center; justify-content:center; }
+    .hdr-title { font-size:1.22rem; font-weight:700; color:var(--bd); }
+    .hdr-r { display:flex; align-items:center; gap:10px; }
+    .upd-badge { display:flex; align-items:center; gap:8px; background:var(--g50); border:1px solid var(--g200); border-radius:var(--rs); padding:6px 12px; color:var(--g500); font-size:.75rem; line-height:1.4; }
+    .upd-badge strong { display:block; color:var(--g700); font-size:.7rem; }
+    .btn-ref { width:34px; height:34px; border:1px solid var(--g200); border-radius:var(--rs); background:var(--white); cursor:pointer; display:flex; align-items:center; justify-content:center; color:var(--g500); transition:.15s; }
+    .btn-ref:hover { background:var(--blue); color:var(--white); border-color:var(--blue); }
+
+    /* TAB NAV */
+    .tabs { position:fixed; top:var(--hh); left:0; right:0; height:var(--tn); background:var(--g50); border-bottom:2px solid var(--g200); display:flex; align-items:flex-end; padding:0 20px; gap:2px; z-index:200; }
+    .tab { padding:0 20px; height:40px; border:none; background:transparent; cursor:pointer; font-size:.82rem; font-weight:500; color:var(--g500); border-bottom:3px solid transparent; margin-bottom:-2px; transition:.15s; display:flex; align-items:center; gap:7px; white-space:nowrap; }
+    .tab:hover { color:var(--bd); }
+    .tab.on { color:var(--bd); font-weight:600; border-bottom-color:var(--blue); }
+    .tab.on.red { color:var(--red); border-bottom-color:var(--red); }
+
+    /* LAYOUT */
+    .lay { display:flex; margin-top:var(--off); min-height:calc(100vh - var(--off)); }
+
+    /* SIDEBAR */
+    .sb { width:var(--sw); min-width:var(--sw); background:var(--white); border-right:1px solid var(--g200); padding:18px 13px; display:flex; flex-direction:column; gap:16px; position:sticky; top:var(--off); height:calc(100vh - var(--off)); overflow-y:auto; }
+    .sb-h { display:flex; align-items:center; gap:8px; padding-bottom:10px; border-bottom:1px solid var(--g100); }
+    .sb-ht { font-size:.7rem; font-weight:700; text-transform:uppercase; letter-spacing:.07em; }
+    .fg { display:flex; flex-direction:column; gap:5px; }
+    .fl { font-size:.72rem; color:var(--g500); font-weight:500; }
+    .fs { width:100%; padding:7px 10px; border:1px solid var(--g200); border-radius:var(--rs); font-size:.75rem; color:var(--g700); background:var(--white); cursor:pointer; outline:none; transition:.15s; }
+    .fs:focus { border-color:var(--blue); box-shadow:0 0 0 3px rgba(37,99,235,.1); }
+    .fs.r:focus { border-color:var(--red); box-shadow:0 0 0 3px rgba(220,38,38,.1); }
+    .sb-info { margin-top:auto; background:#eff6ff; border:1px solid #bfdbfe; border-radius:var(--r); padding:13px 11px; display:flex; flex-direction:column; align-items:center; gap:7px; text-align:center; }
+    .sb-info p { font-size:.7rem; color:#1d4ed8; line-height:1.5; }
+    .btn-clr { width:100%; padding:8px 14px; border:1.5px solid var(--red); border-radius:var(--rs); background:var(--white); color:var(--red); font-size:.75rem; font-weight:600; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:7px; transition:.15s; margin-top:auto; }
+    .btn-clr:hover { background:#fef2f2; }
+
+    /* MAIN */
+    .mn { flex:1; padding:14px 16px; min-width:0; display:flex; flex-direction:column; gap:12px; }
+
+    /* KPI */
+    .kpi5 { display:grid; grid-template-columns:repeat(5,1fr); gap:10px; }
+    .kpi4 { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; }
+    .kc { background:var(--white); border-radius:var(--r); padding:14px 16px; box-shadow:var(--sh); border:1px solid var(--g200); display:flex; align-items:center; gap:13px; }
+    .ki { width:48px; height:48px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .kl { font-size:.67rem; color:var(--g500); font-weight:500; margin-bottom:1px; }
+    .kv { font-size:1.75rem; font-weight:700; line-height:1.05; }
+    .kd { font-size:.67rem; color:var(--g400); margin-top:2px; }
+
+    /* GRID ROWS */
+    .r3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; }
+    .r2 { display:grid; grid-template-columns:3fr 2fr; gap:10px; }
+    .r2b { display:grid; grid-template-columns:3fr 2fr; gap:10px; }
+
+    /* CARD */
+    .cd { background:var(--white); border-radius:var(--r); padding:16px 18px; box-shadow:var(--sh); border:1px solid var(--g200); }
+    .ct { font-size:.82rem; font-weight:600; color:var(--g700); margin-bottom:12px; }
+    .ctr { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
+    .ca { display:flex; gap:6px; }
+    .ib { width:28px; height:28px; border:1px solid var(--g200); border-radius:6px; background:var(--white); cursor:pointer; display:flex; align-items:center; justify-content:center; color:var(--g400); transition:.15s; }
+    .ib:hover { color:var(--g700); border-color:var(--g400); }
+
+    /* RESUMO P1 */
+    .res-body { display:flex; align-items:center; gap:20px; height:200px; }
+    .dw { position:relative; width:180px; height:180px; flex-shrink:0; }
+    .dc { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); pointer-events:none; }
+    .rl { display:flex; flex-direction:column; justify-content:center; gap:18px; flex:1; }
+    .ri { display:flex; flex-direction:column; gap:1px; }
+    .rp { font-size:1.1rem; font-weight:700; display:flex; align-items:center; gap:6px; }
+    .rs { font-size:.7rem; color:var(--g400); padding-left:18px; }
+
+    /* PAGE 2 HEADER */
+    .p2h { display:flex; align-items:flex-start; justify-content:space-between; background:var(--white); border-radius:var(--r); padding:16px 20px; box-shadow:var(--sh); border:1px solid var(--g200); }
+    .p2t { font-size:1.2rem; font-weight:700; color:var(--red); margin-bottom:3px; }
+    .p2s { font-size:.78rem; color:var(--g500); }
+    .p2u { display:flex; align-items:center; gap:8px; color:var(--g500); font-size:.75rem; }
+    .p2u strong { display:block; font-size:.7rem; color:var(--g700); }
+
+    /* STATUS DONUT P2 */
+    .sd-body { display:flex; align-items:center; gap:24px; height:200px; }
+    .sd-inner { position:relative; width:180px; height:180px; flex-shrink:0; }
+    .sd-ctr { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); text-align:center; pointer-events:none; }
+    .sd-val { font-size:1.3rem; font-weight:700; color:var(--g700); line-height:1; }
+    .sd-lbl { font-size:.65rem; color:var(--g400); font-weight:600; letter-spacing:.06em; margin-top:2px; }
+    .sd-leg { display:flex; flex-direction:column; justify-content:center; gap:16px; flex:1; }
+    .sl-item { display:flex; flex-direction:column; gap:2px; }
+    .sl-row { display:flex; align-items:center; gap:8px; }
+    .sl-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+    .sl-name { font-size:.78rem; font-weight:600; }
+    .sl-cnt { font-size:1rem; font-weight:700; }
+    .sl-pct { font-size:.7rem; color:var(--g400); }
+
+    /* TABLE */
+    .tw { overflow-x:auto; }
+    table { width:100%; border-collapse:collapse; font-size:.78rem; }
+    thead tr { background:var(--g50); }
+    thead th { padding:10px 14px; text-align:left; font-weight:600; color:var(--g700); border-bottom:2px solid var(--g200); white-space:nowrap; }
+    tbody tr { border-bottom:1px solid var(--g100); }
+    tbody tr:nth-child(even) { background:#fafbfc; }
+    tbody tr:hover { background:#fff5f5; }
+    tbody td { padding:9px 14px; color:var(--g700); }
+    .bg-o { display:inline-flex; align-items:center; padding:3px 9px; border-radius:20px; font-size:.7rem; font-weight:600; background:#fff7ed; color:#ea580c; }
+    .bg-r { display:inline-flex; align-items:center; padding:3px 9px; border-radius:20px; font-size:.7rem; font-weight:600; background:#fef2f2; color:#dc2626; }
+
+    /* PAGINATION */
+    .pag-row { display:flex; align-items:center; justify-content:space-between; padding-top:12px; border-top:1px solid var(--g100); flex-wrap:wrap; gap:8px; }
+    .pag-info { font-size:.75rem; color:var(--g500); }
+    .pag-btns { display:flex; align-items:center; gap:3px; flex-wrap:wrap; }
+    .pb { min-width:30px; height:30px; padding:0 8px; border:1px solid var(--g200); border-radius:6px; background:var(--white); font-size:.75rem; color:var(--g700); cursor:pointer; transition:.15s; display:flex; align-items:center; justify-content:center; }
+    .pb:hover { background:var(--g100); }
+    .pb.on { background:var(--red); color:var(--white); border-color:var(--red); font-weight:600; }
+    .pb.el { border:none; background:none; cursor:default; }
+    .pag-r { display:flex; align-items:center; gap:8px; font-size:.75rem; color:var(--g500); }
+    .pag-r select { padding:4px 8px; border:1px solid var(--g200); border-radius:6px; font-size:.75rem; background:var(--white); color:var(--g700); cursor:pointer; outline:none; }
+
+  /* ── NAV SIDEBAR (p4) */
+  .nav-logo-box { width:44px; height:44px; background:var(--red); border-radius:10px; display:flex; align-items:center; justify-content:center; margin:0 auto 6px; }
+  .nav-menu { display:flex; flex-direction:column; gap:2px; }
+  .nav-item { display:flex; align-items:center; gap:10px; padding:9px 10px; border-radius:var(--rs); cursor:pointer; font-size:.8rem; color:var(--g500); transition:.15s; }
+  .nav-item:hover { background:var(--g100); color:var(--g700); }
+  .nav-item.nav-on { background:#fef2f2; color:var(--red); font-weight:600; }
+  .nav-item.nav-dim { opacity:.5; cursor:default; pointer-events:none; }
+  .nav-filter { margin-top:auto; width:100%; padding:9px; border:1px solid var(--g200); border-radius:var(--rs); background:var(--white); cursor:pointer; font-size:.75rem; color:var(--g500); display:flex; align-items:center; justify-content:center; gap:6px; transition:.15s; }
+  .nav-filter:hover { background:var(--g100); }
+  /* ── VISOR Atribuível / Backup */
+  .p4-visor { background:#fef2f2; border:1px solid #fecaca; border-radius:var(--rs); padding:10px 12px; display:flex; flex-direction:column; gap:8px; }
+  .p4-visor-title { font-size:.6rem; font-weight:700; text-transform:uppercase; letter-spacing:.07em; color:#dc2626; margin-bottom:2px; }
+  .p4-visor-row { display:flex; align-items:center; justify-content:space-between; gap:6px; }
+  .p4-visor-label { font-size:.68rem; color:#6b7280; font-weight:500; }
+  .p4-visor-val { font-size:1.05rem; font-weight:700; color:#dc2626; min-width:32px; text-align:right; }
+  .p4-visor-badge { font-size:.62rem; background:#dc2626; color:#fff; border-radius:20px; padding:1px 7px; font-weight:700; min-width:28px; text-align:center; }
+  .p4-visor-badge.bkp { background:#6b7280; }
+  .p4-visor-sep { height:1px; background:#fecaca; margin:2px 0; }
+
+  /* ── PAGE 4 LAYOUT */
+  .p4-grid { display:grid; grid-template-columns:2fr 3fr; gap:12px; }
+
+  /* ── RANKING */
+  .rank-item { display:flex; align-items:center; gap:10px; padding:8px 4px; border-bottom:1px solid var(--g100); cursor:pointer; border-radius:6px; margin:0 -4px; transition:background .12s; }
+  .rank-item:hover { background:#fff5f5; }
+  .rank-item.rank-sel { background:#fef2f2 !important; border-left:3px solid #dc2626; padding-left:8px; }
+  .rank-num { width:22px; height:22px; background:var(--red); color:#fff; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:.62rem; font-weight:700; flex-shrink:0; }
+  .rank-body { flex:1; min-width:0; }
+  .rank-name { font-size:.71rem; color:var(--g700); margin-bottom:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .rank-bw { height:7px; background:var(--g100); border-radius:4px; overflow:hidden; }
+  .rank-bf { height:100%; border-radius:4px; }
+  .rank-pct { font-size:.8rem; font-weight:700; color:var(--red); min-width:42px; text-align:right; flex-shrink:0; }
+  .rank-foot { display:flex; justify-content:space-between; padding-top:10px; margin-top:4px; border-top:2px solid var(--g200); font-size:.78rem; font-weight:600; color:var(--g700); }
+  .rank-hint { font-size:.65rem; color:#9ca3af; text-align:center; padding:6px 0 2px; font-style:italic; }
+
+  /* ── MINI KPI */
+  .mini-kpi { background:var(--white); border-radius:var(--r); padding:12px 14px; box-shadow:var(--sh); border:1px solid var(--g200); }
+  .mini-kv { font-size:1.25rem; font-weight:700; line-height:1.1; }
+  .mini-kl { font-size:.69rem; color:var(--g500); font-weight:500; margin-bottom:1px; }
+  .mini-kd { font-size:.64rem; color:var(--g400); }
+
+  /* ── DETALHAMENTO P4 TABLE */
+  .det-tbl { width:100%; border-collapse:collapse; font-size:.77rem; }
+  .det-tbl thead tr { background:var(--g50); }
+  .det-tbl thead th { padding:8px 12px; text-align:left; font-weight:600; color:var(--g700); border-bottom:2px solid var(--g200); }
+  .det-tbl tbody tr { border-bottom:1px solid var(--g100); }
+  .det-tbl tbody tr:nth-child(even) { background:#fafbfc; }
+  .det-tbl tbody tr:hover { background:#fff5f5; }
+  .det-tbl tbody td { padding:7px 12px; }
+
+  /* ── PAGE 5: ATRIBUÍVEIS */
+  .p5-nav { width:52px; min-width:52px; background:#991b1b; display:flex; flex-direction:column; align-items:center; padding:14px 0; gap:4px; position:sticky; top:var(--off); height:calc(100vh - var(--off)); }
+  .p5-ni { width:40px; height:40px; border-radius:var(--rs); display:flex; align-items:center; justify-content:center; cursor:pointer; color:rgba(255,255,255,.52); transition:.15s; }
+  .p5-ni:hover { background:rgba(255,255,255,.15); color:#fff; }
+  .p5-ni.p5-on { background:rgba(255,255,255,.22); color:#fff; }
+  .p5-fp { width:234px; min-width:234px; background:var(--white); border-radius:var(--r); padding:14px; box-shadow:var(--sh); border:1px solid var(--g200); display:flex; flex-direction:column; gap:9px; align-self:flex-start; }
+  .p5-srch { display:flex; align-items:center; gap:8px; border:1px solid var(--g200); border-radius:var(--rs); padding:6px 10px; background:var(--g50); }
+  .p5-srch input { border:none; outline:none; font-size:.74rem; color:var(--g700); flex:1; background:transparent; }
+  .p5-tlist { overflow-y:auto; display:flex; flex-direction:column; gap:1px; max-height:300px; }
+  .p5-ti { display:flex; align-items:flex-start; gap:8px; padding:6px 4px; border-radius:6px; font-size:.7rem; color:var(--g700); line-height:1.4; cursor:pointer; }
+  .p5-ti:hover { background:var(--g50); }
+  .p5-ti input[type=checkbox] { margin-top:2px; accent-color:var(--red); flex-shrink:0; cursor:pointer; }
+  .p5-fp-foot { display:flex; align-items:center; justify-content:space-between; padding-top:8px; border-top:1px solid var(--g100); }
+  .p5-clr { color:var(--red); background:none; border:none; cursor:pointer; font-size:.72rem; font-weight:600; display:flex; align-items:center; gap:5px; }
+  .p5-hdr { display:flex; align-items:flex-start; justify-content:space-between; background:var(--white); border-radius:var(--r); padding:16px 20px; box-shadow:var(--sh); border:1px solid var(--g200); }
+  .p5-hdr-r { display:flex; align-items:center; gap:10px; }
+  .p5-date { display:flex; align-items:center; gap:8px; border:1px solid var(--g200); border-radius:var(--rs); padding:7px 12px; font-size:.75rem; color:var(--g700); background:var(--white); }
+  .p5-btn { display:flex; align-items:center; gap:7px; border:1px solid var(--g200); border-radius:var(--rs); padding:7px 14px; font-size:.75rem; color:var(--g700); background:var(--white); cursor:pointer; transition:.15s; }
+  .p5-btn:hover { border-color:var(--red); color:var(--red); }
+
+  /* ── PAGE 6: MATRIZ */
+  .leg-block { background:var(--white); border-radius:var(--r); padding:16px 18px; box-shadow:var(--sh); border:1px solid var(--g200); }
+  .leg-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; }
+  .leg-card { border-radius:var(--rs); padding:12px 14px; border:1.5px solid; }
+  .p6-toolbar { background:var(--white); border-radius:var(--r); padding:11px 14px; box-shadow:var(--sh); border:1px solid var(--g200); display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .p6-search { display:flex; align-items:center; gap:8px; border:1px solid var(--g200); border-radius:var(--rs); padding:6px 12px; background:var(--g50); flex:1; min-width:200px; }
+  .p6-search input { border:none; outline:none; font-size:.75rem; color:var(--g700); background:transparent; width:100%; }
+  .p6-sel { padding:7px 10px; border:1px solid var(--g200); border-radius:var(--rs); font-size:.75rem; color:var(--g700); background:var(--white); cursor:pointer; outline:none; }
+  .p6-btn { display:flex; align-items:center; gap:6px; padding:7px 14px; border:1px solid var(--g200); border-radius:var(--rs); font-size:.75rem; color:var(--g700); background:var(--white); cursor:pointer; transition:.15s; white-space:nowrap; }
+  .p6-btn:hover { border-color:var(--red); color:var(--red); }
+  .p6-btn-red { border-color:var(--red) !important; color:var(--red) !important; font-weight:600; }
+  .p6-btn-red:hover { background:#fef2f2; }
+  .mat-wrap { overflow:auto; border-radius:var(--r); border:1px solid var(--g200); box-shadow:var(--sh); max-height:calc(100vh - var(--off) - 390px); min-height:280px; }
+  .mat-tbl { border-collapse:separate; border-spacing:0; }
+  .mat-th-v { height:130px; vertical-align:bottom; padding:3px 0; min-width:34px; max-width:34px; width:34px; background:var(--white); text-align:center; border-bottom:2px solid var(--g200); border-left:1px solid var(--g100); }
+  .mat-th-v span { display:block; writing-mode:vertical-lr; transform:rotate(180deg); font-size:.6rem; line-height:1.3; max-height:124px; overflow:hidden; }
+  .mat-cell { text-align:center; padding:5px 2px; border-bottom:1px solid #f1f5f9; border-left:1px solid #f1f5f9; font-weight:700; font-size:.72rem; width:34px; min-width:34px; }
+  .mat-t { color:#16a34a; background:#f0fdf4; }
+  .mat-a { color:#dc2626; background:#fef2f2; }
+  .mat-b { color:#2563eb; background:#eff6ff; }
+  .mat-na { color:#94a3b8; background:#f8fafc; }
+  .mat-row:nth-child(even) .mat-cell { filter:brightness(.97); }
+  .mat-select { width:100%; min-width:34px; border:0; background:transparent; color:inherit; font:inherit; font-weight:700; text-align:center; outline:0; cursor:pointer; appearance:none; }
+  .mat-saving { opacity:.55; }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="hdr">
+  <div class="hdr-l">
+    <div class="logo">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/>
+      </svg>
+    </div>
+    <h1 class="hdr-title">Treinamentos | Universidade SIMPAR</h1>
+  </div>
+  <div class="hdr-r">
+    <div class="upd-badge">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      <div><strong>Última atualização</strong><span class="upd-time">30/04/2026 15:54:57</span></div>
+    </div>
+    <span id="srv-badge" style="display:none;font-size:.65rem;font-weight:600;padding:3px 8px;border-radius:20px;margin-right:4px"></span>
+    <button class="btn-ref" id="btn-atualizar" onclick="atualizarDados()" title="Atualizar dados (offline — lê arquivo Skore exportado)">
+      <svg id="ico-ref" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+    </button>
+  </div>
+</header>
+
+<!-- ══ MODAL DE CARREGAMENTO ══ -->
+<div id="modal-upd" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(10,18,35,.82);backdrop-filter:blur(6px);align-items:center;justify-content:center">
+  <div style="background:#fff;border-radius:20px;width:420px;max-width:92vw;box-shadow:0 30px 80px rgba(0,0,0,.35);overflow:hidden;text-align:center">
+
+    <!-- Topo azul -->
+    <div style="background:linear-gradient(135deg,#1e3a5f,#2563eb);padding:28px 24px 22px">
+      <div style="font-size:.7rem;letter-spacing:2px;color:rgba(255,255,255,.6);text-transform:uppercase;margin-bottom:6px">Universidade SIMPAR</div>
+      <div style="color:#fff;font-weight:700;font-size:1.15rem">Atualizando dados</div>
+    </div>
+
+    <!-- Spinner + etapa -->
+    <div style="padding:32px 28px 20px">
+      <!-- Spinner circular grande -->
+      <div id="modal-spinner" style="width:64px;height:64px;border:4px solid #e2e8f0;border-top-color:#2563eb;border-radius:50%;animation:spin .9s linear infinite;margin:0 auto 24px"></div>
+
+      <!-- Etapa atual -->
+      <div id="modal-etapa" style="font-size:1rem;font-weight:600;color:#1e3a5f;margin-bottom:8px">Iniciando...</div>
+      <div id="modal-status" style="font-size:.8rem;color:#64748b;min-height:20px"></div>
+
+      <!-- Barra de progresso -->
+      <div style="background:#f1f5f9;border-radius:99px;height:6px;margin:20px 0 16px;overflow:hidden">
+        <div id="modal-barra" style="height:100%;background:linear-gradient(90deg,#2563eb,#16a34a);border-radius:99px;width:0%;transition:width .5s ease"></div>
+      </div>
+
+      <!-- Passos -->
+      <div style="display:flex;justify-content:space-between;margin-bottom:20px">
+        <div class="passo" id="p-login"   style="display:flex;flex-direction:column;align-items:center;gap:4px;flex:1">
+          <div style="width:28px;height:28px;border-radius:50%;background:#e2e8f0;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;color:#94a3b8;transition:all .3s" id="pc-login">1</div>
+          <span style="font-size:.62rem;color:#94a3b8;transition:color .3s" id="pt-login">Login</span>
+        </div>
+        <div style="flex:1;display:flex;align-items:center;padding-bottom:16px"><div style="height:2px;background:#e2e8f0;width:100%"></div></div>
+        <div class="passo" id="p-looker"  style="display:flex;flex-direction:column;align-items:center;gap:4px;flex:1">
+          <div style="width:28px;height:28px;border-radius:50%;background:#e2e8f0;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;color:#94a3b8;transition:all .3s" id="pc-looker">2</div>
+          <span style="font-size:.62rem;color:#94a3b8;transition:color .3s" id="pt-looker">Looker</span>
+        </div>
+        <div style="flex:1;display:flex;align-items:center;padding-bottom:16px"><div style="height:2px;background:#e2e8f0;width:100%"></div></div>
+        <div class="passo" id="p-dados"   style="display:flex;flex-direction:column;align-items:center;gap:4px;flex:1">
+          <div style="width:28px;height:28px;border-radius:50%;background:#e2e8f0;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;color:#94a3b8;transition:all .3s" id="pc-dados">3</div>
+          <span style="font-size:.62rem;color:#94a3b8;transition:color .3s" id="pt-dados">Dados</span>
+        </div>
+        <div style="flex:1;display:flex;align-items:center;padding-bottom:16px"><div style="height:2px;background:#e2e8f0;width:100%"></div></div>
+        <div class="passo" id="p-dash"    style="display:flex;flex-direction:column;align-items:center;gap:4px;flex:1">
+          <div style="width:28px;height:28px;border-radius:50%;background:#e2e8f0;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;color:#94a3b8;transition:all .3s" id="pc-dash">4</div>
+          <span style="font-size:.62rem;color:#94a3b8;transition:color .3s" id="pt-dash">Dashboard</span>
+        </div>
+      </div>
+
+      <!-- Timer -->
+      <div id="modal-timer" style="font-size:.75rem;color:#94a3b8;margin-bottom:4px"></div>
+      <div style="font-size:.7rem;color:#cbd5e1">Não feche esta janela</div>
+    </div>
+
+    <!-- Rodapé (só aparece ao final) -->
+    <div id="modal-rodape" style="display:none;padding:0 24px 24px;display:none;gap:10px;justify-content:center">
+      <button id="modal-fechar" onclick="fecharModal()" style="padding:9px 24px;border:1px solid #e2e8f0;border-radius:8px;background:#fff;cursor:pointer;font-size:.82rem;color:#64748b;display:none">Fechar</button>
+      <button id="modal-reload" style="padding:9px 24px;border:none;border-radius:8px;background:#16a34a;color:#fff;cursor:pointer;font-size:.82rem;font-weight:600;display:none">✓ Recarregar</button>
+    </div>
+
+    <!-- Área de erro (oculta por padrão) -->
+    <div id="modal-erro-box" style="display:none;margin:0 24px 20px;padding:12px 16px;background:#fef2f2;border:1px solid #fecaca;border-radius:10px;font-size:.78rem;color:#991b1b;text-align:left"></div>
+
+  </div>
+</div>
+
+<!-- TABS -->
+<nav class="tabs">
+  <button class="tab on" data-t="p1" onclick="go('p1')">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+    Visão Geral
+  </button>
+  <button class="tab red" data-t="p2" onclick="go('p2')">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+    Pendências por Gestor
+  </button>
+  <button class="tab red" data-t="p3" onclick="go('p3')">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+    Pendentes por Turno
+  </button>
+  <button class="tab red" data-t="p4" onclick="go('p4')">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+    Procedimentos JSL/GRU
+  </button>
+  <button class="tab red" data-t="p5" onclick="go('p5')" style="display:none">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><polyline points="16 11 18 13 22 9"/></svg>
+    Atribuíveis
+  </button>
+  <button class="tab red" data-t="p7" onclick="go('p7')">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+    Obrigatórios Simpar
+  </button>
+  <button class="tab" data-t="p6" onclick="go('p6')">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/></svg>
+    Matriz
+  </button>
+</nav>
+
+<!-- ══════════════════ PAGE 1: VISÃO GERAL ══════════════════ -->
+<div class="lay" id="p1">
+  <aside class="sb">
+    <div class="sb-h">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+      <span class="sb-ht" style="color:var(--blue)">Filtros</span>
+    </div>
+    <div class="fg"><label class="fl">Data</label><select class="fs" id="p1-data"><option value="">Todos</option></select></div>
+    <div class="fg"><label class="fl">Turno</label><select class="fs" id="p1-turno"><option value="">Todos</option></select></div>
+    <div class="fg"><label class="fl">Área / Setor</label><select class="fs" id="p1-setor"><option value="">Todos</option></select></div>
+    <div class="fg"><label class="fl">Tipo de Treinamento</label><select class="fs" id="p1-tipo"><option value="">Todos</option></select></div>
+    <button class="btn-clr" id="p1-clear" style="border-color:var(--blue);color:var(--blue)">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
+      Limpar Filtros
+    </button>
+    <div class="sb-info">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      <p>Use os filtros ao lado para explorar os dados</p>
+    </div>
+  </aside>
+
+  <main class="mn">
+    <!-- KPIs -->
+    <div class="kpi5">
+      <div class="kc"><div class="ki" style="background:#eff6ff"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div><div><div class="kl">Total de Colaboradores</div><div class="kv" style="color:#2563eb" id="kv-total">–</div><div class="kd">Colaboradores ativos</div></div></div>
+      <div class="kc"><div class="ki" style="background:#f0fdf4"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div><div><div class="kl">Completos</div><div class="kv" style="color:#16a34a" id="kv-ok">–</div><div class="kd" id="kd-ok">Colaboradores sem pendências</div></div></div>
+      <div class="kc"><div class="ki" style="background:#fff7ed"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#ea580c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div><div><div class="kl">Em Andamento</div><div class="kv" style="color:#ea580c" id="kv-and">–</div><div class="kd">Colaboradores únicos</div></div></div>
+      <div class="kc"><div class="ki" style="background:#fef2f2"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg></div><div><div class="kl">Não Iniciado</div><div class="kv" style="color:#dc2626" id="kv-ns">–</div><div class="kd">Colaboradores únicos</div></div></div>
+      <div class="kc"><div class="ki" style="background:#f5f3ff"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/><line x1="12" y1="2" x2="12" y2="4"/></svg></div><div><div class="kl">Minutos Treinados</div><div class="kv" style="color:#7c3aed" id="kv-min">–</div><div class="kd">Soma da carga horária</div></div></div>
+    </div>
+
+    <!-- Row 1 charts -->
+    <div class="r3">
+      <div class="cd"><div class="ct">Status Geral de Conclusão</div><div style="height:148px;position:relative"><canvas id="c1"></canvas></div></div>
+      <div class="cd"><div class="ct">Conclusão por Turno (%)</div><div style="height:148px;position:relative"><canvas id="c2"></canvas></div></div>
+      <div class="cd"><div class="ct">Distribuição por Turno</div><div style="height:148px;position:relative"><canvas id="c3"></canvas></div></div>
+    </div>
+
+    <!-- Top 10 -->
+    <div class="cd"><div class="ct">Conclusão de Treinamentos (Top 10 com mais pendências)</div><div style="height:235px;position:relative"><canvas id="c4"></canvas></div></div>
+
+    <!-- Bottom -->
+    <div class="r2">
+      <div class="cd"><div class="ct">Progressão diária de conclusão</div><div style="height:215px;position:relative"><canvas id="c5"></canvas></div></div>
+      <div class="cd"><div class="ct">Resumo Geral</div>
+        <div class="res-body">
+          <div class="dw"><canvas id="c6" width="180" height="180"></canvas>
+            <div class="dc"><svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+          </div>
+          <div class="rl">
+            <div class="ri"><div class="rp" style="color:#16a34a"><svg width="11" height="11" viewBox="0 0 24 24" fill="#16a34a"><polygon points="5,3 19,12 5,21"/></svg><span id="rg-pct-ok">–</span></div><div class="rs"><span id="rg-ok">–</span> Concluídos</div></div>
+            <div class="ri"><div class="rp" style="color:#ea580c"><svg width="11" height="11" viewBox="0 0 24 24" fill="#ea580c"><polygon points="5,3 19,12 5,21"/></svg><span id="rg-pct-and">–</span></div><div class="rs"><span id="rg-and">–</span> Em Andamento</div></div>
+            <div class="ri"><div class="rp" style="color:#dc2626"><svg width="11" height="11" viewBox="0 0 24 24" fill="#dc2626"><polygon points="5,3 19,12 5,21"/></svg><span id="rg-pct-ns">–</span></div><div class="rs"><span id="rg-ns">–</span> Não Iniciados</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- ══════════════════ PAGE 2: PENDÊNCIAS POR GESTOR ══════════════════ -->
+<div class="lay" id="p2" style="display:none">
+  <aside class="sb">
+    <!-- Logo vermelho -->
+    <div style="display:flex;justify-content:center;padding:4px 0 2px">
+      <div style="width:44px;height:44px;background:#fef2f2;border-radius:10px;border:1.5px solid #fecaca;display:flex;align-items:center;justify-content:center">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      </div>
+    </div>
+    <div class="sb-h" style="padding-bottom:10px">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+      <span class="sb-ht" style="color:#dc2626">Filtros</span>
+    </div>
+    <div class="fg"><label class="fl">Gestor</label><select class="fs r" id="p2-gestor"><option value="">Todos</option></select></div>
+    <div class="fg"><label class="fl">Setor</label><select class="fs r" id="p2-setor"><option value="">Todos</option></select></div>
+    <div class="fg"><label class="fl">Turno</label><select class="fs r" id="p2-turno"><option value="">Todos</option></select></div>
+    <div class="fg"><label class="fl">Status</label><select class="fs r" id="p2-status"><option value="">Todos</option></select></div>
+    <div class="fg"><label class="fl">Treinamento</label><select class="fs r" id="p2-treinamento"><option value="">Todos</option></select></div>
+    <button class="btn-clr" id="p2-clear">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
+      Limpar Filtros
+    </button>
+  </aside>
+
+  <main class="mn">
+    <!-- Page header -->
+    <div class="p2h">
+      <div>
+        <div class="p2t">Pendências por Gestor</div>
+        <div class="p2s">Acompanhamento de treinamentos pendentes por colaborador e missão</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <button onclick="exportarPendencias()" style="display:flex;align-items:center;gap:6px;padding:7px 14px;border:1px solid #dc2626;border-radius:6px;background:#fef2f2;color:#dc2626;font-size:.75rem;font-weight:600;cursor:pointer">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Exportar Excel
+        </button>
+        <div class="p2u">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+          <div><strong>Última atualização</strong><span class="upd-time">23/05/2025 10:35</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- KPIs -->
+    <div class="kpi4">
+      <div class="kc"><div class="ki" style="background:#fef2f2"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div><div><div class="kl">Total de Pendências</div><div class="kv" style="color:#dc2626" id="p2-kv-pend">–</div><div class="kd" id="p2-kd-pend">–</div></div></div>
+      <div class="kc"><div class="ki" style="background:#fef2f2"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div><div><div class="kl">Colaboradores Pendentes</div><div class="kv" style="color:#dc2626" id="p2-kv-colab">–</div><div class="kd">Colaboradores únicos</div></div></div>
+      <div class="kc"><div class="ki" style="background:#fef2f2"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M6 20v-2a6 6 0 0 1 12 0v2"/></svg></div><div><div class="kl">Gestores com Pendências</div><div class="kv" style="color:#dc2626" id="p2-kv-gest">–</div><div class="kd">Com pelo menos 1 pendência</div></div></div>
+      <div class="kc"><div class="ki" style="background:#fef2f2"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg></div><div><div class="kl">Treinamentos Pendentes</div><div class="kv" style="color:#dc2626" id="p2-kv-train">–</div><div class="kd">Tipos de treinamentos</div></div></div>
+    </div>
+
+    <!-- Charts -->
+    <div class="r2b">
+      <div class="cd"><div class="ct">Top Gestores com Mais Pendências</div><div style="height:248px;position:relative"><canvas id="c7"></canvas></div></div>
+      <div class="cd"><div class="ct">Pendências por Status</div>
+        <div class="sd-body">
+          <div class="sd-inner">
+            <canvas id="c8" width="180" height="180"></canvas>
+            <div class="sd-ctr"><div class="sd-val" id="p2-sd-val">–</div><div class="sd-lbl">TOTAL</div></div>
+          </div>
+          <div class="sd-leg">
+            <div class="sl-item">
+              <div class="sl-row"><div class="sl-dot" style="background:#ea580c"></div><span class="sl-name" style="color:#ea580c">IN_PROGRESS</span></div>
+              <div class="sl-cnt" style="color:#ea580c" id="p2-sl-ip">–</div>
+              <div class="sl-pct" id="p2-sl-ip-pct">–</div>
+            </div>
+            <div class="sl-item">
+              <div class="sl-row"><div class="sl-dot" style="background:#dc2626"></div><span class="sl-name" style="color:#dc2626">NOT_STARTED</span></div>
+              <div class="sl-cnt" style="color:#dc2626" id="p2-sl-ns">–</div>
+              <div class="sl-pct" id="p2-sl-ns-pct">–</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Table -->
+    <div class="cd">
+      <div class="ctr">
+        <span class="ct" style="margin-bottom:0">Detalhamento de Pendências</span>
+        <div class="ca">
+          <button class="ib"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg></button>
+          <button class="ib"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg></button>
+          <button class="ib"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg></button>
+        </div>
+      </div>
+      <div class="tw">
+        <table><thead><tr><th>Matrícula</th><th>Nome</th><th>Gestor</th><th>Setor</th><th>Turno</th><th>Missão</th><th>Status</th></tr></thead>
+        <tbody id="tb"></tbody></table>
+      </div>
+      <div class="pag-row">
+        <div class="pag-info" id="pi"></div>
+        <div class="pag-btns" id="pb"></div>
+        <div class="pag-r">Linhas por página: <select onchange="cpp(this.value)"><option>10</option><option>25</option><option>50</option></select></div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- ══════════════════ PAGE 3: PENDENTES POR TURNO ══════════════════ -->
+<div class="lay" id="p3" style="display:none">
+  <aside class="sb">
+    <div style="display:flex;justify-content:center;padding:4px 0 2px">
+      <div style="width:44px;height:44px;background:#fef2f2;border-radius:10px;border:1.5px solid #fecaca;display:flex;align-items:center;justify-content:center">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+      </div>
+    </div>
+    <div class="sb-h">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+      <span class="sb-ht" style="color:#dc2626">Filtros</span>
+    </div>
+    <div class="fg"><label class="fl">Turno</label><select class="fs r" id="p3-turno"><option value="">Todos</option></select></div>
+    <div class="fg"><label class="fl">Setor</label><select class="fs r" id="p3-setor"><option value="">Todos</option></select></div>
+    <div class="fg"><label class="fl">Gestor</label><select class="fs r" id="p3-gestor"><option value="">Todos</option></select></div>
+    <div class="fg"><label class="fl">Status</label><select class="fs r" id="p3-status"><option value="">Todos</option></select></div>
+    <div class="fg"><label class="fl">Treinamento</label><select class="fs r" id="p3-treinamento"><option value="">Todos</option></select></div>
+    <button class="btn-clr" id="p3-clear">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
+      Limpar Filtros
+    </button>
+  </aside>
+
+  <main class="mn">
+    <!-- Page header -->
+    <div class="p2h">
+      <div>
+        <div class="p2t">Pendentes por Turno</div>
+        <div class="p2s">Acompanhamento de treinamentos pendentes por turno, colaborador e status</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <button onclick="exportarPendencias()" style="display:flex;align-items:center;gap:6px;padding:7px 14px;border:1px solid #dc2626;border-radius:6px;background:#fef2f2;color:#dc2626;font-size:.75rem;font-weight:600;cursor:pointer">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Exportar Excel
+        </button>
+        <div class="p2u">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+          <div><strong>Última atualização</strong><span class="upd-time">23/05/2025 10:35</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- KPIs -->
+    <div class="kpi4">
+      <div class="kc"><div class="ki" style="background:#fef2f2"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div><div><div class="kl">Pessoas Pendentes</div><div class="kv" style="color:#dc2626" id="p3-kv-colab">–</div><div class="kd">Colaboradores únicos</div></div></div>
+      <div class="kc"><div class="ki" style="background:#fef2f2"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg></div><div><div class="kl">Não Iniciado</div><div class="kv" style="color:#dc2626" id="p3-kv-ns">–</div><div class="kd" id="p3-kd-ns">–</div></div></div>
+      <div class="kc"><div class="ki" style="background:#fff7ed"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#ea580c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg></div><div><div class="kl">Em Andamento</div><div class="kv" style="color:#ea580c" id="p3-kv-and">–</div><div class="kd" id="p3-kd-and">–</div></div></div>
+      <div class="kc"><div class="ki" style="background:#fef2f2"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg></div><div><div class="kl">Turnos com Pendência</div><div class="kv" style="color:#dc2626" id="p3-kv-turnos">–</div><div class="kd">Turnos com pelo menos 1 pendência</div></div></div>
+    </div>
+
+    <!-- Charts -->
+    <div class="r2b">
+      <div class="cd"><div class="ct">Pendências por Turno</div><div style="height:240px;position:relative"><canvas id="c9"></canvas></div></div>
+      <div class="cd"><div class="ct">Pendências por Status</div>
+        <div class="sd-body">
+          <div class="sd-inner">
+            <canvas id="c10" width="180" height="180"></canvas>
+            <div class="sd-ctr"><div class="sd-val" id="p3-sd-val">–</div><div class="sd-lbl">TOTAL</div></div>
+          </div>
+          <div class="sd-leg">
+            <div class="sl-item">
+              <div class="sl-row"><div class="sl-dot" style="background:#dc2626"></div><span class="sl-name" style="color:#dc2626">NOT_STARTED</span></div>
+              <div class="sl-cnt" style="color:#dc2626" id="p3-sl-ns">–</div>
+              <div class="sl-pct" id="p3-sl-ns-pct">–</div>
+            </div>
+            <div class="sl-item">
+              <div class="sl-row"><div class="sl-dot" style="background:#ea580c"></div><span class="sl-name" style="color:#ea580c">IN_PROGRESS</span></div>
+              <div class="sl-cnt" style="color:#ea580c" id="p3-sl-ip">–</div>
+              <div class="sl-pct" id="p3-sl-ip-pct">–</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Table -->
+    <div class="cd">
+      <div class="ctr">
+        <span class="ct" style="margin-bottom:0">Detalhamento de Pendências por Turno</span>
+        <div class="ca">
+          <button class="ib"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg></button>
+          <button class="ib"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg></button>
+          <button class="ib"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg></button>
+        </div>
+      </div>
+      <div class="tw">
+        <table><thead><tr><th>Matrícula</th><th>Nome</th><th>Setor</th><th>Turno</th><th>Gestor</th><th>Status</th></tr></thead>
+        <tbody id="tb3"></tbody></table>
+      </div>
+      <div class="pag-row">
+        <div class="pag-info" id="pi3"></div>
+        <div class="pag-btns" id="pb3"></div>
+        <div class="pag-r">Linhas por página: <select onchange="cpp3(this.value)"><option>10</option><option>25</option><option>50</option></select></div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- ══════════════════ PAGE 7: OBRIGATÓRIOS SIMPAR ══════════════════ -->
+<div class="lay" id="p7" style="display:none">
+  <aside class="sb" style="padding:14px 10px">
+    <div class="nav-logo-box">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+    </div>
+    <div style="font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#dc2626;text-align:center;margin-bottom:8px">Obrigatórios Simpar</div>
+    <div class="nav-menu">
+      <div class="nav-item nav-on">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        Visão Geral
+      </div>
+      <div class="nav-item nav-dim">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        CONTROLE DE MUDANÇA
+      </div>
+      <div class="nav-item nav-dim">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        INTEGRAÇÃO SIMPAR
+      </div>
+      <div class="nav-item nav-dim">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        COMPLIANCE CORP.
+      </div>
+      <div class="nav-item nav-dim">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        SEGURANÇA NO TRAB.
+      </div>
+      <div class="nav-item nav-dim">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        AUDITORIA INTERNA
+      </div>
+      <div class="nav-item nav-dim">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        TREINAMENTOS
+      </div>
+      <div class="nav-item nav-dim">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        LGPD BÁSICO
+      </div>
+      <div class="nav-item nav-dim">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        LIDERANÇA ESSENCIAL
+      </div>
+      <div class="nav-item nav-dim">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        DIREÇÃO DEFENSIVA
+      </div>
+    </div>
+    <button class="nav-filter">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+      Filtrar
+    </button>
+  </aside>
+
+  <main class="mn">
+    <div class="p2h">
+      <div>
+        <div class="p2t">Obrigatórios Simpar</div>
+        <div class="p2s">Acompanhe o status de conclusão dos treinamentos obrigatórios por procedimento.</div>
+      </div>
+      <div class="p2u">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+        <div><strong>Última atualização</strong><span class="upd-time">30/04/2026 15:54</span></div>
+      </div>
+    </div>
+
+    <div class="kpi5">
+      <div class="kc"><div class="ki" style="background:#fef2f2"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/></svg></div><div><div class="kl">Procedimentos</div><div class="kv" style="color:#dc2626" id="p7-kv-miss">–</div><div class="kd">missões no relatório</div></div></div>
+      <div class="kc"><div class="ki" style="background:#f0fdf4"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div><div><div class="kl">Concluídos</div><div class="kv" style="color:#16a34a" id="p7-kv-ok">–</div><div class="kd" style="color:#16a34a;font-weight:600" id="p7-kd-ok">–</div></div></div>
+      <div class="kc"><div class="ki" style="background:#fff7ed"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#ea580c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div><div><div class="kl">Em Andamento</div><div class="kv" style="color:#ea580c" id="p7-kv-and">–</div><div class="kd" id="p7-kd-and">–</div></div></div>
+      <div class="kc"><div class="ki" style="background:#fef2f2"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg></div><div><div class="kl">Não Iniciados</div><div class="kv" style="color:#dc2626" id="p7-kv-ns">–</div><div class="kd" id="p7-kd-ns">–</div></div></div>
+      <div class="kc"><div class="ki" style="background:#eff6ff"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div><div><div class="kl">Colaboradores Ativos</div><div class="kv" style="color:#2563eb" id="p7-kv-colab">–</div><div class="kd">no arquivo de ativos</div></div></div>
+    </div>
+
+    <div class="p4-grid">
+      <div class="cd">
+        <div class="ct">Ranking por % de Conclusão</div>
+        <div id="rank-list7">
+          <div class="rank-item"><div class="rank-num">1</div><div class="rank-body"><div class="rank-name">INTEGRAÇÃO SIMPAR</div><div class="rank-bw"><div class="rank-bf" style="width:91%;background:#16a34a"></div></div></div><div class="rank-pct" style="color:#16a34a">91%</div></div>
+          <div class="rank-item"><div class="rank-num">2</div><div class="rank-body"><div class="rank-name">COMPLIANCE CORPORATIVO</div><div class="rank-bw"><div class="rank-bf" style="width:86%;background:#16a34a"></div></div></div><div class="rank-pct" style="color:#16a34a">86%</div></div>
+          <div class="rank-item"><div class="rank-num">3</div><div class="rank-body"><div class="rank-name">DIREÇÃO DEFENSIVA</div><div class="rank-bw"><div class="rank-bf" style="width:82%;background:#16a34a"></div></div></div><div class="rank-pct" style="color:#16a34a">82%</div></div>
+          <div class="rank-item"><div class="rank-num">4</div><div class="rank-body"><div class="rank-name">LIDERANÇA ESSENCIAL</div><div class="rank-bw"><div class="rank-bf" style="width:79%;background:#16a34a"></div></div></div><div class="rank-pct" style="color:#16a34a">79%</div></div>
+          <div class="rank-item"><div class="rank-num">5</div><div class="rank-body"><div class="rank-name">LGPD BÁSICO</div><div class="rank-bw"><div class="rank-bf" style="width:75%;background:#ea580c"></div></div></div><div class="rank-pct" style="color:#ea580c">75%</div></div>
+          <div class="rank-item"><div class="rank-num">6</div><div class="rank-body"><div class="rank-name">SEGURANÇA NO TRABALHO</div><div class="rank-bw"><div class="rank-bf" style="width:71%;background:#ea580c"></div></div></div><div class="rank-pct" style="color:#ea580c">71%</div></div>
+          <div class="rank-item"><div class="rank-num">7</div><div class="rank-body"><div class="rank-name">EXCEL BÁSICO</div><div class="rank-bw"><div class="rank-bf" style="width:67%;background:#ea580c"></div></div></div><div class="rank-pct" style="color:#ea580c">67%</div></div>
+          <div class="rank-item"><div class="rank-num">8</div><div class="rank-body"><div class="rank-name">AUDITORIA INTERNA E AUTO INSPEÇÃO</div><div class="rank-bw"><div class="rank-bf" style="width:61%;background:#ea580c"></div></div></div><div class="rank-pct" style="color:#ea580c">61%</div></div>
+          <div class="rank-item"><div class="rank-num">9</div><div class="rank-body"><div class="rank-name">TREINAMENTOS</div><div class="rank-bw"><div class="rank-bf" style="width:55%;background:#dc2626"></div></div></div><div class="rank-pct" style="color:#dc2626">55%</div></div>
+          <div class="rank-item"><div class="rank-num">10</div><div class="rank-body"><div class="rank-name">CONTROLE DE MUDANÇA</div><div class="rank-bw"><div class="rank-bf" style="width:48%;background:#dc2626"></div></div></div><div class="rank-pct" style="color:#dc2626">48%</div></div>
+        </div>
+        <div class="rank-foot"><span>Total: 668 colaboradores</span><span>Média: 71,5%</span></div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div class="cd">
+          <div class="ct" id="p7-det-title">Detalhamento por Procedimento</div>
+          <div style="overflow-x:auto">
+            <table class="det-tbl">
+              <thead><tr><th>Procedimento</th><th style="text-align:right">Total</th><th style="text-align:right">Concluídos</th><th style="text-align:right">Pendentes</th><th style="text-align:right">% Conclusão</th></tr></thead>
+              <tbody>
+                <tr><td>PRO-GRU0001 — INTEGRAÇÃO SIMPAR</td><td style="text-align:right">668</td><td style="text-align:right;color:#16a34a;font-weight:600">608</td><td style="text-align:right;color:#dc2626;font-weight:600">60</td><td style="text-align:right"><span style="background:#f0fdf4;color:#16a34a;padding:2px 8px;border-radius:20px;font-size:.7rem;font-weight:700">91%</span></td></tr>
+                <tr><td>PRO-GRU0002 — COMPLIANCE CORPORATIVO</td><td style="text-align:right">668</td><td style="text-align:right;color:#16a34a;font-weight:600">575</td><td style="text-align:right;color:#dc2626;font-weight:600">93</td><td style="text-align:right"><span style="background:#f0fdf4;color:#16a34a;padding:2px 8px;border-radius:20px;font-size:.7rem;font-weight:700">86%</span></td></tr>
+                <tr><td>PRO-GRU0004 — DIREÇÃO DEFENSIVA</td><td style="text-align:right">668</td><td style="text-align:right;color:#16a34a;font-weight:600">548</td><td style="text-align:right;color:#dc2626;font-weight:600">120</td><td style="text-align:right"><span style="background:#f0fdf4;color:#16a34a;padding:2px 8px;border-radius:20px;font-size:.7rem;font-weight:700">82%</span></td></tr>
+                <tr><td>PRO-GRU0009 — LIDERANÇA ESSENCIAL</td><td style="text-align:right">668</td><td style="text-align:right;color:#16a34a;font-weight:600">528</td><td style="text-align:right;color:#dc2626;font-weight:600">140</td><td style="text-align:right"><span style="background:#f0fdf4;color:#16a34a;padding:2px 8px;border-radius:20px;font-size:.7rem;font-weight:700">79%</span></td></tr>
+                <tr><td>PRO-GRU0008 — LGPD BÁSICO</td><td style="text-align:right">668</td><td style="text-align:right;color:#ea580c;font-weight:600">501</td><td style="text-align:right;color:#dc2626;font-weight:600">167</td><td style="text-align:right"><span style="background:#fff7ed;color:#ea580c;padding:2px 8px;border-radius:20px;font-size:.7rem;font-weight:700">75%</span></td></tr>
+                <tr><td>PRO-GRU0003 — SEGURANÇA NO TRABALHO</td><td style="text-align:right">668</td><td style="text-align:right;color:#ea580c;font-weight:600">474</td><td style="text-align:right;color:#dc2626;font-weight:600">194</td><td style="text-align:right"><span style="background:#fff7ed;color:#ea580c;padding:2px 8px;border-radius:20px;font-size:.7rem;font-weight:700">71%</span></td></tr>
+                <tr><td>PRO-GRU0007 — EXCEL BÁSICO</td><td style="text-align:right">668</td><td style="text-align:right;color:#ea580c;font-weight:600">448</td><td style="text-align:right;color:#dc2626;font-weight:600">220</td><td style="text-align:right"><span style="background:#fff7ed;color:#ea580c;padding:2px 8px;border-radius:20px;font-size:.7rem;font-weight:700">67%</span></td></tr>
+                <tr><td>PRO-GRU0005 — AUDITORIA INTERNA</td><td style="text-align:right">668</td><td style="text-align:right;color:#ea580c;font-weight:600">407</td><td style="text-align:right;color:#dc2626;font-weight:600">261</td><td style="text-align:right"><span style="background:#fff7ed;color:#ea580c;padding:2px 8px;border-radius:20px;font-size:.7rem;font-weight:700">61%</span></td></tr>
+                <tr><td>PRO-GRU0006 — TREINAMENTOS</td><td style="text-align:right">668</td><td style="text-align:right;color:#dc2626;font-weight:600">367</td><td style="text-align:right;color:#dc2626;font-weight:600">301</td><td style="text-align:right"><span style="background:#fef2f2;color:#dc2626;padding:2px 8px;border-radius:20px;font-size:.7rem;font-weight:700">55%</span></td></tr>
+                <tr><td>PRO-GRU0010 — CONTROLE DE MUDANÇA</td><td style="text-align:right">668</td><td style="text-align:right;color:#dc2626;font-weight:600">321</td><td style="text-align:right;color:#dc2626;font-weight:600">347</td><td style="text-align:right"><span style="background:#fef2f2;color:#dc2626;padding:2px 8px;border-radius:20px;font-size:.7rem;font-weight:700">48%</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div class="cd">
+            <div class="ct">Resumo Geral</div>
+            <div style="height:160px;position:relative"><canvas id="c15"></canvas></div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <div class="mini-kpi">
+              <div class="mini-kl">Maior conclusão</div>
+              <div class="mini-kv" style="color:#16a34a" id="p7-mk1v">–</div>
+              <div class="mini-kd" id="p7-mk1d">–</div>
+            </div>
+            <div class="mini-kpi">
+              <div class="mini-kl">Menor conclusão</div>
+              <div class="mini-kv" style="color:#dc2626" id="p7-mk2v">–</div>
+              <div class="mini-kd" id="p7-mk2d">–</div>
+            </div>
+            <div class="mini-kpi">
+              <div class="mini-kl">Média de conclusão</div>
+              <div class="mini-kv" style="color:#2563eb" id="p7-mk3v">–</div>
+              <div class="mini-kd" id="p7-mk3d">–</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="cd">
+          <div class="ct">Top 10 — Pendências por Procedimento</div>
+          <div style="height:200px;position:relative"><canvas id="c16"></canvas></div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- ══════════════════ PAGE 4: PROCEDIMENTOS ══════════════════ -->
+<div class="lay" id="p4" style="display:none">
+  <aside class="sb" style="padding:14px 10px">
+    <div class="nav-logo-box">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+    </div>
+    <div style="font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#dc2626;text-align:center;margin-bottom:8px">Procedimentos</div>
+    <div class="nav-menu" id="p4-nav-menu">
+      <!-- gerado dinamicamente por initP4Sidebar() -->
+      <div class="nav-item nav-on">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        Visão Geral
+      </div>
+    </div>
+
+    <!-- Visor Atribuível / Backup -->
+    <div class="p4-visor" id="p4-visor">
+      <div class="p4-visor-title" id="p4-visor-titulo">Totais — Visão Geral</div>
+      <div class="p4-visor-row">
+        <span class="p4-visor-label">Atribuível</span>
+        <span class="p4-visor-badge" id="p4-v-atr">–</span>
+      </div>
+      <div class="p4-visor-sep"></div>
+      <div class="p4-visor-row">
+        <span class="p4-visor-label">Backup</span>
+        <span class="p4-visor-badge bkp" id="p4-v-bkp">–</span>
+      </div>
+    </div>
+
+    <button class="nav-filter">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+      Filtrar
+    </button>
+  </aside>
+
+  <main class="mn">
+    <!-- Page header -->
+    <div class="p2h">
+      <div>
+        <div class="p2t">Procedimentos</div>
+        <div class="p2s">Acompanhe o status de conclusão dos treinamentos obrigatórios por procedimento.</div>
+      </div>
+      <div class="p2u">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+        <div><strong>Última atualização</strong><span class="upd-time">30/04/2026 15:54</span></div>
+      </div>
+    </div>
+
+    <!-- 5 KPIs -->
+    <div class="kpi5">
+      <div class="kc"><div class="ki" style="background:#fef2f2"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/></svg></div><div><div class="kl">Procedimentos</div><div class="kv" style="color:#dc2626" id="p4-kv-miss">–</div><div class="kd">missões no relatório</div></div></div>
+      <div class="kc"><div class="ki" style="background:#f0fdf4"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div><div><div class="kl">Concluídos</div><div class="kv" style="color:#16a34a" id="p4-kv-ok">–</div><div class="kd" style="color:#16a34a;font-weight:600" id="p4-kd-ok">–</div></div></div>
+      <div class="kc"><div class="ki" style="background:#fff7ed"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#ea580c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div><div><div class="kl">Em Andamento</div><div class="kv" style="color:#ea580c" id="p4-kv-and">–</div><div class="kd" id="p4-kd-and">–</div></div></div>
+      <div class="kc"><div class="ki" style="background:#fef2f2"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg></div><div><div class="kl">Não Iniciados</div><div class="kv" style="color:#dc2626" id="p4-kv-ns">–</div><div class="kd" id="p4-kd-ns">–</div></div></div>
+      <div class="kc"><div class="ki" style="background:#eff6ff"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div><div><div class="kl">Colaboradores Ativos</div><div class="kv" style="color:#2563eb" id="p4-kv-colab">–</div><div class="kd">no arquivo de ativos</div></div></div>
+    </div>
+
+    <!-- Grid: ranking (left) + content (right) -->
+    <div class="p4-grid">
+      <!-- Left: Ranking -->
+      <div class="cd">
+        <div class="ct">Ranking por % de Conclusão</div>
+        <div id="rank-list">
+          <div class="rank-item"><div class="rank-num">1</div><div class="rank-body"><div class="rank-name">INTEGRAÇÃO SIMPAR</div><div class="rank-bw"><div class="rank-bf" style="width:91%;background:#16a34a"></div></div></div><div class="rank-pct" style="color:#16a34a">91%</div></div>
+          <div class="rank-item"><div class="rank-num">2</div><div class="rank-body"><div class="rank-name">COMPLIANCE CORPORATIVO</div><div class="rank-bw"><div class="rank-bf" style="width:86%;background:#16a34a"></div></div></div><div class="rank-pct" style="color:#16a34a">86%</div></div>
+          <div class="rank-item"><div class="rank-num">3</div><div class="rank-body"><div class="rank-name">DIREÇÃO DEFENSIVA</div><div class="rank-bw"><div class="rank-bf" style="width:82%;background:#16a34a"></div></div></div><div class="rank-pct" style="color:#16a34a">82%</div></div>
+          <div class="rank-item"><div class="rank-num">4</div><div class="rank-body"><div class="rank-name">LIDERANÇA ESSENCIAL</div><div class="rank-bw"><div class="rank-bf" style="width:79%;background:#16a34a"></div></div></div><div class="rank-pct" style="color:#16a34a">79%</div></div>
+          <div class="rank-item"><div class="rank-num">5</div><div class="rank-body"><div class="rank-name">LGPD BÁSICO</div><div class="rank-bw"><div class="rank-bf" style="width:75%;background:#ea580c"></div></div></div><div class="rank-pct" style="color:#ea580c">75%</div></div>
+          <div class="rank-item"><div class="rank-num">6</div><div class="rank-body"><div class="rank-name">SEGURANÇA NO TRABALHO</div><div class="rank-bw"><div class="rank-bf" style="width:71%;background:#ea580c"></div></div></div><div class="rank-pct" style="color:#ea580c">71%</div></div>
+          <div class="rank-item"><div class="rank-num">7</div><div class="rank-body"><div class="rank-name">EXCEL BÁSICO</div><div class="rank-bw"><div class="rank-bf" style="width:67%;background:#ea580c"></div></div></div><div class="rank-pct" style="color:#ea580c">67%</div></div>
+          <div class="rank-item"><div class="rank-num">8</div><div class="rank-body"><div class="rank-name">AUDITORIA INTERNA E AUTO INSPEÇÃO</div><div class="rank-bw"><div class="rank-bf" style="width:61%;background:#ea580c"></div></div></div><div class="rank-pct" style="color:#ea580c">61%</div></div>
+          <div class="rank-item"><div class="rank-num">9</div><div class="rank-body"><div class="rank-name">TREINAMENTOS</div><div class="rank-bw"><div class="rank-bf" style="width:55%;background:#dc2626"></div></div></div><div class="rank-pct" style="color:#dc2626">55%</div></div>
+          <div class="rank-item"><div class="rank-num">10</div><div class="rank-body"><div class="rank-name">CONTROLE DE MUDANÇA</div><div class="rank-bw"><div class="rank-bf" style="width:48%;background:#dc2626"></div></div></div><div class="rank-pct" style="color:#dc2626">48%</div></div>
+        </div>
+        <div class="rank-foot"><span>Total: 668 colaboradores</span><span>Média: 71,5%</span></div>
+      </div>
+
+      <!-- Right: stacked content -->
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <!-- Detalhamento table -->
+        <div class="cd">
+          <div class="ct" id="p4-det-title">Detalhamento por Procedimento</div>
+          <div style="overflow-x:auto">
+            <table class="det-tbl">
+              <thead><tr><th>Procedimento</th><th style="text-align:right">Total</th><th style="text-align:right">Concluídos</th><th style="text-align:right">Pendentes</th><th style="text-align:right">% Conclusão</th></tr></thead>
+              <tbody>
+                <tr><td>PRO-GRU0001 — INTEGRAÇÃO SIMPAR</td><td style="text-align:right">668</td><td style="text-align:right;color:#16a34a;font-weight:600">608</td><td style="text-align:right;color:#dc2626;font-weight:600">60</td><td style="text-align:right"><span style="background:#f0fdf4;color:#16a34a;padding:2px 8px;border-radius:20px;font-size:.7rem;font-weight:700">91%</span></td></tr>
+                <tr><td>PRO-GRU0002 — COMPLIANCE CORPORATIVO</td><td style="text-align:right">668</td><td style="text-align:right;color:#16a34a;font-weight:600">575</td><td style="text-align:right;color:#dc2626;font-weight:600">93</td><td style="text-align:right"><span style="background:#f0fdf4;color:#16a34a;padding:2px 8px;border-radius:20px;font-size:.7rem;font-weight:700">86%</span></td></tr>
+                <tr><td>PRO-GRU0004 — DIREÇÃO DEFENSIVA</td><td style="text-align:right">668</td><td style="text-align:right;color:#16a34a;font-weight:600">548</td><td style="text-align:right;color:#dc2626;font-weight:600">120</td><td style="text-align:right"><span style="background:#f0fdf4;color:#16a34a;padding:2px 8px;border-radius:20px;font-size:.7rem;font-weight:700">82%</span></td></tr>
+                <tr><td>PRO-GRU0009 — LIDERANÇA ESSENCIAL</td><td style="text-align:right">668</td><td style="text-align:right;color:#16a34a;font-weight:600">528</td><td style="text-align:right;color:#dc2626;font-weight:600">140</td><td style="text-align:right"><span style="background:#f0fdf4;color:#16a34a;padding:2px 8px;border-radius:20px;font-size:.7rem;font-weight:700">79%</span></td></tr>
+                <tr><td>PRO-GRU0008 — LGPD BÁSICO</td><td style="text-align:right">668</td><td style="text-align:right;color:#ea580c;font-weight:600">501</td><td style="text-align:right;color:#dc2626;font-weight:600">167</td><td style="text-align:right"><span style="background:#fff7ed;color:#ea580c;padding:2px 8px;border-radius:20px;font-size:.7rem;font-weight:700">75%</span></td></tr>
+                <tr><td>PRO-GRU0003 — SEGURANÇA NO TRABALHO</td><td style="text-align:right">668</td><td style="text-align:right;color:#ea580c;font-weight:600">474</td><td style="text-align:right;color:#dc2626;font-weight:600">194</td><td style="text-align:right"><span style="background:#fff7ed;color:#ea580c;padding:2px 8px;border-radius:20px;font-size:.7rem;font-weight:700">71%</span></td></tr>
+                <tr><td>PRO-GRU0007 — EXCEL BÁSICO</td><td style="text-align:right">668</td><td style="text-align:right;color:#ea580c;font-weight:600">448</td><td style="text-align:right;color:#dc2626;font-weight:600">220</td><td style="text-align:right"><span style="background:#fff7ed;color:#ea580c;padding:2px 8px;border-radius:20px;font-size:.7rem;font-weight:700">67%</span></td></tr>
+                <tr><td>PRO-GRU0005 — AUDITORIA INTERNA</td><td style="text-align:right">668</td><td style="text-align:right;color:#ea580c;font-weight:600">407</td><td style="text-align:right;color:#dc2626;font-weight:600">261</td><td style="text-align:right"><span style="background:#fff7ed;color:#ea580c;padding:2px 8px;border-radius:20px;font-size:.7rem;font-weight:700">61%</span></td></tr>
+                <tr><td>PRO-GRU0006 — TREINAMENTOS</td><td style="text-align:right">668</td><td style="text-align:right;color:#dc2626;font-weight:600">367</td><td style="text-align:right;color:#dc2626;font-weight:600">301</td><td style="text-align:right"><span style="background:#fef2f2;color:#dc2626;padding:2px 8px;border-radius:20px;font-size:.7rem;font-weight:700">55%</span></td></tr>
+                <tr><td>PRO-GRU0010 — CONTROLE DE MUDANÇA</td><td style="text-align:right">668</td><td style="text-align:right;color:#dc2626;font-weight:600">321</td><td style="text-align:right;color:#dc2626;font-weight:600">347</td><td style="text-align:right"><span style="background:#fef2f2;color:#dc2626;padding:2px 8px;border-radius:20px;font-size:.7rem;font-weight:700">48%</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Resumo donut + 3 mini KPIs -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div class="cd">
+            <div class="ct">Resumo Geral</div>
+            <div style="height:160px;position:relative"><canvas id="c11"></canvas></div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <div class="mini-kpi">
+              <div class="mini-kl">Maior conclusão</div>
+              <div class="mini-kv" style="color:#16a34a" id="p4-mk1v">–</div>
+              <div class="mini-kd" id="p4-mk1d">–</div>
+            </div>
+            <div class="mini-kpi">
+              <div class="mini-kl">Menor conclusão</div>
+              <div class="mini-kv" style="color:#dc2626" id="p4-mk2v">–</div>
+              <div class="mini-kd" id="p4-mk2d">–</div>
+            </div>
+            <div class="mini-kpi">
+              <div class="mini-kl">Média de conclusão</div>
+              <div class="mini-kv" style="color:#2563eb" id="p4-mk3v">–</div>
+              <div class="mini-kd" id="p4-mk3d">–</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Top 10 pendências bar -->
+        <div class="cd">
+          <div class="ct">Top 10 — Pendências por Procedimento</div>
+          <div style="height:200px;position:relative"><canvas id="c12"></canvas></div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- ══════════════════ PAGE 6: MATRIZ ══════════════════ -->
+<div class="lay" id="p6" style="display:none">
+  <main class="mn">
+
+    <!-- Header -->
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;background:var(--white);border-radius:var(--r);padding:16px 20px;box-shadow:var(--sh);border:1px solid var(--g200)">
+      <div>
+        <div style="font-size:1.2rem;font-weight:700;color:var(--bd);margin-bottom:3px">Matriz de Treinamentos</div>
+        <div style="font-size:.78rem;color:var(--g500)">Consulta da aplicabilidade e situação dos treinamentos por colaborador</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <div class="p5-date"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Maio 2026</div>
+        <button class="p6-btn"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg> Filtros</button>
+        <button class="p6-btn p6-btn-red" onclick="exportarMatriz()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Exportar</button>
+        <button class="p6-btn"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg></button>
+      </div>
+    </div>
+
+    <!-- Padrão de Avaliação -->
+    <div class="leg-block">
+      <div style="font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--g500);margin-bottom:12px">Padrão de Avaliação</div>
+      <div class="leg-grid">
+        <div class="leg-card" style="border-color:#fecaca;background:#fef2f2">
+          <div style="font-size:1.3rem;font-weight:800;color:#dc2626;line-height:1;margin-bottom:5px">A</div>
+          <div style="font-size:.75rem;font-weight:700;color:#dc2626;margin-bottom:4px">Treinamento Aplicável</div>
+          <div style="font-size:.69rem;color:#64748b;line-height:1.5">Colaborador que ainda não foi treinado, mas precisa passar pela trilha de desenvolvimento da área.</div>
+        </div>
+        <div class="leg-card" style="border-color:#bbf7d0;background:#f0fdf4">
+          <div style="font-size:1.3rem;font-weight:800;color:#16a34a;line-height:1;margin-bottom:5px">T</div>
+          <div style="font-size:.75rem;font-weight:700;color:#16a34a;margin-bottom:4px">Treinado</div>
+          <div style="font-size:.69rem;color:#64748b;line-height:1.5">Colaborador que já passou pela trilha e está apto a desempenhar suas atividades com autonomia.</div>
+        </div>
+        <div class="leg-card" style="border-color:#bfdbfe;background:#eff6ff">
+          <div style="font-size:1.3rem;font-weight:800;color:#2563eb;line-height:1;margin-bottom:5px">B</div>
+          <div style="font-size:.75rem;font-weight:700;color:#2563eb;margin-bottom:4px">Backup</div>
+          <div style="font-size:.69rem;color:#64748b;line-height:1.5">Designado para substituir o titular em ausências, férias, afastamentos ou aumento de demanda.</div>
+        </div>
+        <div class="leg-card" style="border-color:#e2e8f0;background:#f8fafc">
+          <div style="font-size:1.3rem;font-weight:800;color:#334155;line-height:1;margin-bottom:5px">N/A</div>
+          <div style="font-size:.75rem;font-weight:700;color:#334155;margin-bottom:4px">Não Aplicável</div>
+          <div style="font-size:.69rem;color:#64748b;line-height:1.5">Colaborador que não necessita do treinamento para aquele procedimento ou instrução de trabalho.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toolbar -->
+    <div class="p6-toolbar">
+      <div class="p6-search">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input id="m6-search" type="text" placeholder="Buscar por nome, matrícula ou cargo...">
+      </div>
+      <select class="p6-sel" id="m6-turno"><option value="">Turno</option><option>ADM</option><option>ALFA</option><option>BRAVO</option><option>CHARLIE</option></select>
+      <select class="p6-sel" id="m6-setor"><option value="">Setor</option><option>COURIER</option><option>DI</option><option>IMPORTAÇÃO</option><option>OPERAÇÕES</option><option>PROJ. E MELHORIAS</option><option>RECEBIMENTO</option></select>
+      <select class="p6-sel" id="m6-cargo"><option value="">Cargo</option><option>ANALISTA DE DADOS E PLANEJ.</option><option>AUXILIAR DE MOVIMENTAÇÃO I</option><option>INSPETOR DE CARGA</option><option>MOTORISTA OPERADOR</option><option>OPERADOR DE EMPILHADEIRA I</option></select>
+      <button class="p6-btn p6-btn-red" onclick="exportarMatriz()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Excel</button>
+      <button class="p6-btn"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> CSV</button>
+      <div style="margin-left:auto;font-size:.74rem;color:var(--g500)" id="m6-count">10 colaboradores · 24 treinamentos</div>
+    </div>
+
+    <!-- Matrix table -->
+    <div class="mat-wrap"><div id="mat-container"></div></div>
+
+    <!-- Stats row -->
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px">
+      <div class="cd" style="text-align:center;padding:12px"><div style="font-size:.69rem;color:var(--g500);margin-bottom:3px">Treinados (T)</div><div style="font-size:1.5rem;font-weight:700;color:#16a34a" id="m6-tot">—</div></div>
+      <div class="cd" style="text-align:center;padding:12px"><div style="font-size:.69rem;color:var(--g500);margin-bottom:3px">Aplicáveis (A)</div><div style="font-size:1.5rem;font-weight:700;color:#dc2626" id="m6-a">—</div></div>
+      <div class="cd" style="text-align:center;padding:12px"><div style="font-size:.69rem;color:var(--g500);margin-bottom:3px">Backup (B)</div><div style="font-size:1.5rem;font-weight:700;color:#2563eb" id="m6-b">—</div></div>
+      <div class="cd" style="text-align:center;padding:12px"><div style="font-size:.69rem;color:var(--g500);margin-bottom:3px">Não Aplicável (N/A)</div><div style="font-size:1.5rem;font-weight:700;color:#64748b" id="m6-na">—</div></div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ══════════════════ PAGE 5: ATRIBUÍVEIS ══════════════════ -->
+<div class="lay" id="p5" style="display:none">
+
+  <!-- Red icon nav bar -->
+  <aside class="p5-nav">
+    <div style="width:40px;height:40px;background:rgba(255,255,255,.18);border-radius:var(--rs);display:flex;align-items:center;justify-content:center;margin-bottom:10px">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+    </div>
+    <div class="p5-ni" title="Home">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    </div>
+    <div class="p5-ni p5-on" title="Treinamentos">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+    </div>
+    <div class="p5-ni" title="Indicadores">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+    </div>
+    <div class="p5-ni" title="Colaboradores">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+    </div>
+    <div class="p5-ni" title="Relatórios">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+    </div>
+    <div style="margin-top:auto"></div>
+    <div class="p5-ni" title="Configurações">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    </div>
+  </aside>
+
+  <main class="mn">
+    <!-- Page header -->
+    <div class="p5-hdr">
+      <div>
+        <div style="font-size:1.2rem;font-weight:700;color:var(--red);margin-bottom:3px">Atribuíveis</div>
+        <div style="font-size:.78rem;color:var(--g500)">Colaboradores elegíveis por treinamento</div>
+      </div>
+      <div class="p5-hdr-r">
+        <div class="p5-date">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          <span class="upd-time">–</span>
+        </div>
+        <button class="p5-btn">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+          Filtros
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- 4 KPI cards -->
+    <div class="kpi4">
+      <div class="kc"><div class="ki" style="background:#fef2f2"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div><div><div class="kl">Total de Colaboradores</div><div class="kv" style="color:#dc2626" id="p5-kv-total">–</div><div class="kd">Colaboradores únicos pendentes</div></div></div>
+      <div class="kc"><div class="ki" style="background:#fef2f2"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg></div><div><div class="kl">Missões</div><div class="kv" style="color:#dc2626" id="p5-kv-miss">–</div><div class="kd">Total de missões no relatório</div></div></div>
+      <div class="kc"><div class="ki" style="background:#fef2f2"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div><div><div class="kl">Setores</div><div class="kv" style="color:#dc2626" id="p5-kv-setores">–</div><div class="kd">Setores com pendências</div></div></div>
+      <div class="kc"><div class="ki" style="background:#fef2f2"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><polyline points="16 11 18 13 22 9"/></svg></div><div><div class="kl">Pendências</div><div class="kv" style="color:#dc2626" id="p5-kv-pend">–</div><div class="kd">Total de treinamentos pendentes</div></div></div>
+    </div>
+
+    <!-- Filter panel + Table -->
+    <div style="display:flex;gap:12px;align-items:flex-start">
+
+      <!-- Filter panel -->
+      <div class="p5-fp">
+        <div style="font-size:.82rem;font-weight:600;color:var(--g700)">Filtro de Treinamentos</div>
+        <div class="p5-srch">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" id="p5-search" placeholder="Pesquisar treinamento...">
+        </div>
+        <div class="p5-tlist" id="p5-tlist">
+          <label class="p5-ti"><input type="checkbox" checked> IST1484 - GESTÃO DE RACKS - GRU</label>
+          <label class="p5-ti"><input type="checkbox" checked> IST1487 - PONTO ZERO - GRU</label>
+          <label class="p5-ti"><input type="checkbox"> IST1488 - RECUSA DO TRANSELEVADOR - GRU</label>
+          <label class="p5-ti"><input type="checkbox"> IST1489 - MOVIMENTAÇÃO DE CARGAS POR EMPILHADEIRA/...</label>
+          <label class="p5-ti"><input type="checkbox"> IST1490 - LINHA SAÚDE - GRU</label>
+          <label class="p5-ti"><input type="checkbox"> IST1502 - INSPEÇÃO E SERVIÇOS - GRU</label>
+          <label class="p5-ti"><input type="checkbox"> IST1503 - MOVIMENTAÇÃO MANUAL DE CARGAS - GRU</label>
+          <label class="p5-ti"><input type="checkbox" checked> IST1548 - UNIVERSIDADE SIMPAR - GRU</label>
+          <label class="p5-ti"><input type="checkbox"> IST1553 - GESTÃO DE DOCAS - GRU</label>
+          <label class="p5-ti"><input type="checkbox"> IST1554 - ESTACIONAMENTO - GRU</label>
+          <label class="p5-ti"><input type="checkbox"> IST1556 - MOVIMENTAÇÃO DE CARGAS PERIGOSAS - IMP</label>
+          <label class="p5-ti"><input type="checkbox"> IST1557 - TRANSFERÊNCIA DE CARGAS ENTRE ARMAZÉNS</label>
+          <label class="p5-ti"><input type="checkbox"> IST1558 - AMARRAÇÃO DE ULD - LÂMINA PALETE AÉREO</label>
+          <label class="p5-ti"><input type="checkbox"> IST1585 - DESPALETIZAÇÃO DE VEÍCULOS - GRU</label>
+          <label class="p5-ti"><input type="checkbox"> MO154 - Manual da Qualidade - BPA e Distribuição</label>
+          <label class="p5-ti"><input type="checkbox"> PRO9156 - ARMAZENAGEM NA IMPORTAÇÃO - GRU</label>
+        </div>
+        <div class="p5-fp-foot">
+          <span style="font-size:.72rem;color:var(--g500)" id="p5-count">0 treinamentos</span>
+          <button class="p5-clr" id="p5-clear">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+            Limpar filtros
+          </button>
+        </div>
+      </div>
+
+      <!-- Table -->
+      <div class="cd" style="flex:1;min-width:0">
+        <div class="ctr">
+          <span class="ct" style="margin-bottom:0">Colaboradores Atribuíveis</span>
+          <div class="ca">
+            <button class="ib" title="Exportar Excel" onclick="exportarAtribuiveis()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button>
+            <button class="ib" title="Mais opções"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg></button>
+          </div>
+        </div>
+        <div class="tw">
+          <table>
+            <thead><tr>
+              <th style="cursor:pointer">Matrícula <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle"><polyline points="6 9 12 15 18 9"/></svg></th>
+              <th>Nome</th><th>Cargo</th><th>Setor</th>
+            </tr></thead>
+            <tbody id="tb5"></tbody>
+          </table>
+        </div>
+        <div class="pag-row">
+          <div class="pag-btns" id="pb5"></div>
+          <div class="pag-info" id="pi5"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Charts row -->
+    <div class="r2b">
+      <!-- Donut: by sector -->
+      <div class="cd">
+        <div class="ct">Distribuição por Setor</div>
+        <div style="display:flex;align-items:flex-start;gap:20px">
+          <div class="sd-inner" style="flex-shrink:0">
+            <canvas id="c13" width="180" height="180"></canvas>
+            <div class="sd-ctr"><div class="sd-val" id="p5-sd-val">–</div><div class="sd-lbl">ELEGÍVEIS</div></div>
+          </div>
+          <div id="p5-donut-leg" style="display:flex;flex-direction:column;gap:9px;padding-top:12px;flex:1"></div>
+        </div>
+      </div>
+
+      <!-- Bar: top 5 by cargo -->
+      <div class="cd">
+        <div class="ct">Top 5 por Cargo</div>
+        <div style="height:210px;position:relative"><canvas id="c14"></canvas></div>
+        <div style="text-align:right;padding-top:12px;border-top:1px solid var(--g100);margin-top:4px">
+          <button style="border:1px solid var(--red);border-radius:var(--rs);padding:6px 16px;font-size:.75rem;color:var(--red);background:var(--white);cursor:pointer;font-weight:600;transition:.15s" onmouseover="this.style.background='#fef2f2'" onmouseout="this.style.background='var(--white)'">Ver todos os cargos</button>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+Chart.register(ChartDataLabels);
+const C={blue:'#2563eb',green:'#16a34a',orange:'#ea580c',red:'#dc2626',purple:'#7c3aed',pink:'#db2777',indigo:'#4338ca'};
+const TK='#64748b', GR='#f0f4f8';
+// D = dados reais do gerar_dados_dash.py; null = usa valores de exemplo
+const D = (typeof DADOS !== 'undefined') ? DADOS : null;
+if(D) document.querySelectorAll('.upd-time').forEach(el=>el.textContent=D.updated_at);
+
+// ── KPIs Visão Geral ──────────────────────────────────────────────────────────
+if(D){
+  const fmt = n => n==null?'–':Number(n).toLocaleString('pt-BR');
+  document.getElementById('kv-total').textContent = fmt(D.total_ativos);
+  document.getElementById('kv-ok').textContent    = fmt(D.concluidos);
+  document.getElementById('kv-and').textContent   = fmt(D.em_andamento);
+  document.getElementById('kv-ns').textContent    = fmt(D.nao_iniciado);
+  document.getElementById('kv-min').textContent   = D.minutos > 0 ? fmt(D.minutos)+' min' : '–';
+  const pct = D.pct != null ? Number(D.pct).toFixed(1) : '–';
+  document.getElementById('kd-ok').textContent    = pct+'% dos ativos';
+
+  // ── Resumo Geral (donut legenda) ──────────────────────────────────────────
+  const _tot = D.total_ativos||D.total||1;
+  const _pOk  = (_tot>0?(D.concluidos/_tot*100):0).toFixed(2)+'%';
+  const _pAnd = (_tot>0?(D.em_andamento/_tot*100):0).toFixed(2)+'%';
+  const _pNs  = (_tot>0?(D.nao_iniciado/_tot*100):0).toFixed(2)+'%';
+  document.getElementById('rg-pct-ok').textContent  = _pOk;
+  document.getElementById('rg-ok').textContent      = fmt(D.concluidos);
+  document.getElementById('rg-pct-and').textContent = _pAnd;
+  document.getElementById('rg-and').textContent     = fmt(D.em_andamento);
+  document.getElementById('rg-pct-ns').textContent  = _pNs;
+  document.getElementById('rg-ns').textContent      = fmt(D.nao_iniciado);
+
+  // ── KPIs Page 2 ───────────────────────────────────────────────────────────
+  const _cp = D.colaboradores_pendentes||[];
+  const _uniqColab = new Set(_cp.map(r=>r.mat)).size;
+  const _uniqGest  = new Set(_cp.map(r=>r.gestor).filter(Boolean)).size;
+  const _uniqTrain = new Set(_cp.map(r=>r.missao).filter(Boolean)).size;
+  const _ePend = document.getElementById('p2-kv-pend');
+  if(_ePend){
+    _ePend.textContent = fmt(D.pendentes);
+    document.getElementById('p2-kd-pend').textContent = fmt(D.pendentes)+' treinamentos pendentes';
+    document.getElementById('p2-kv-colab').textContent = fmt(_uniqColab);
+    document.getElementById('p2-kv-gest').textContent  = fmt(_uniqGest);
+    document.getElementById('p2-kv-train').textContent = fmt(_uniqTrain);
+  }
+}
+
+// ── TAB SWITCH
+let p2done=false, p3done=false, p4done=false, p5done=false, p6done=false, p7done=false;
+function go(id){
+  ['p1','p2','p3','p4','p5','p6','p7'].forEach(p=>document.getElementById(p).style.display=p===id?'flex':'none');
+  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('on'));
+  document.querySelector(`[data-t="${id}"]`).classList.add('on');
+  if(id==='p2'&&!p2done){initP2();p2done=true;}
+  if(id==='p3'&&!p3done){initP3();p3done=true;}
+  if(id==='p4'&&!p4done){initP4();p4done=true;}
+  if(id==='p5'&&!p5done){initP5();p5done=true;}
+  if(id==='p6'&&!p6done){initP6();p6done=true;}
+  if(id==='p7'&&!p7done){initP7();p7done=true;}
+}
+
+// ── PAGE 1 CHARTS
+const P1_CHARTS = {};
+window.P1_CHARTS = P1_CHARTS;
+// ── c1: % por status
+{const _base=D?(D.total_ativos||D.total||1):1,_pOk=D?D.pct:73.20,_pNo=D?+(D.nao_iniciado/_base*100).toFixed(2):18.11,_pAn=D?+(D.em_andamento/_base*100).toFixed(2):8.68;
+P1_CHARTS.c1=new Chart(document.getElementById('c1'),{type:'bar',data:{labels:['% Completos','% Não Iniciado','% Em Andamento'],datasets:[{data:[_pOk,_pNo,_pAn],backgroundColor:[C.green,C.red,C.orange],borderRadius:6,borderSkipped:false}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,layout:{padding:{right:62}},plugins:{legend:{display:false},datalabels:{anchor:'end',align:'end',offset:6,formatter:v=>v.toFixed(2)+'%',color:TK,font:{size:11,weight:'600'}}},scales:{x:{min:0,max:100,ticks:{callback:v=>v+'%',color:TK,font:{size:10}},grid:{color:GR}},y:{ticks:{color:TK,font:{size:11}},grid:{display:false}}}}});}
+
+// ── c2: % conclusão por turno
+{const _lb=D?.turnos_pct?.labels??['BRAVO','CHARLIE','ALFA','ADM'],_vl=D?.turnos_pct?.values??[82.1,75.3,68.4,59.0];
+const _bg=[C.blue,C.indigo,C.orange,C.pink,C.purple,C.green,C.red].slice(0,_lb.length);
+P1_CHARTS.c2=new Chart(document.getElementById('c2'),{type:'bar',data:{labels:_lb,datasets:[{data:_vl,backgroundColor:_bg,borderRadius:6,borderSkipped:false}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,layout:{padding:{right:52}},plugins:{legend:{display:false},datalabels:{anchor:'end',align:'end',offset:6,formatter:v=>v+'%',color:TK,font:{size:11,weight:'600'}}},scales:{x:{min:0,max:100,ticks:{callback:v=>v+'%',color:TK,font:{size:10}},grid:{color:GR}},y:{ticks:{color:TK,font:{size:11}},grid:{display:false}}}}});}
+
+// ── c3: distribuição por turno/status
+{const _lb=D?.status_labels??['BRAVO','CHARLIE','ALFA','ADM','DEFINIR'],_vl=D?.status_values??[33.5,31.3,21.9,9.8,2.7];
+const _bg=[C.green,C.orange,C.red,C.blue,C.indigo,C.purple,C.pink].slice(0,_lb.length);
+P1_CHARTS.c3=new Chart(document.getElementById('c3'),{type:'doughnut',data:{labels:_lb,datasets:[{data:_vl,backgroundColor:_bg,borderWidth:2,borderColor:'#fff'}]},options:{responsive:true,maintainAspectRatio:false,cutout:'54%',plugins:{legend:{position:'right',labels:{font:{size:10},color:TK,boxWidth:11,padding:7}},datalabels:{formatter:(v,ctx)=>{const t=ctx.dataset.data.reduce((a,b)=>a+b,0);return(v/t*100).toFixed(1)+'%';},color:'#fff',font:{size:10,weight:'700'},display:ctx=>ctx.dataset.data[ctx.dataIndex]/(ctx.dataset.data.reduce((a,b)=>a+b,0))>0.05}}}});}
+
+{
+  const _tab=D?.missoes?.tabela??[];
+  const _top10=_tab.slice().sort((a,b)=>b.pendentes-a.pendentes).slice(0,10);
+  const _fallback=!_top10.length;
+  const _lb=_fallback
+    ?[['Segurança no','Trabalho'],['NR-35 Trabalho','em Altura'],['LGPD','Básico'],['Compliance','Corp.'],['Integração','SIMPAR'],['Direção','Defensiva'],['Liderança','Essencial'],['Excel','Básico'],['Atendimento','Cliente'],['Comunicação','Eficaz']]
+    :_top10.map(r=>{const nm=r.missao.length>30?r.missao.slice(0,28)+'…':r.missao;const pts=nm.split(/\s+/);return pts.length>4?[pts.slice(0,3).join(' '),pts.slice(3).join(' ')]:nm;});
+  const _co=_fallback?[27,18,14,11,11,11,10,9,8,7]:_top10.map(r=>r.concluidos);
+  const _pd=_fallback?[38,25,18,15,13,12,10,10,9,8]:_top10.map(r=>r.pendentes);
+  const _tot=_fallback?[65,43,32,26,24,23,20,19,17,15]:_top10.map(r=>r.total);
+  P1_CHARTS.c4=new Chart(document.getElementById('c4'),{type:'bar',data:{labels:_lb,datasets:[{label:'Pendentes',data:_pd,backgroundColor:C.red,borderRadius:0,stack:'s'},{label:'Concluídos',data:_co,backgroundColor:C.green,borderRadius:{topLeft:4,topRight:4},stack:'s'}]},options:{responsive:true,maintainAspectRatio:false,layout:{padding:{top:24}},plugins:{legend:{position:'top',align:'start',labels:{font:{size:11},color:TK,boxWidth:12,padding:16}},datalabels:{display:ctx=>ctx.datasetIndex===1,anchor:'end',align:'end',offset:2,formatter:(_,ctx)=>_tot[ctx.dataIndex],color:TK,font:{size:11,weight:'700'}}},scales:{x:{stacked:true,ticks:{color:TK,font:{size:9},maxRotation:0},grid:{display:false}},y:{stacked:true,ticks:{color:TK,font:{size:10}},grid:{color:GR},title:{display:true,text:'Matrículas',color:TK,font:{size:10}}}}}});
+}
+
+const dias=['17 de abr','18 de abr','19 de abr','20 de abr','21 de abr','22 de abr','23 de abr','24 de abr','25 de abr','26 de abr','27 de abr','28 de abr','29 de abr'];
+const ml=(col,d,l)=>({label:l,borderColor:col,backgroundColor:col+'15',data:d,tension:0.35,pointRadius:3.5,pointBackgroundColor:col,pointHoverRadius:5,fill:false,borderWidth:2});
+P1_CHARTS.c5=new Chart(document.getElementById('c5'),{type:'line',data:{labels:dias,datasets:[ml(C.blue,[12,5,9,3,1,2,3,4,14,8,19,7,4],'BRAVO'),ml(C.indigo,[4,2,5,1,0,1,2,3,5,4,8,3,6],'CHARLIE'),ml(C.orange,[4,1,3,1,1,0,1,1,3,2,4,1,2],'ALFA'),ml(C.pink,[1,0,1,0,0,0,1,0,2,1,2,1,1],'ADM')]},options:{responsive:true,maintainAspectRatio:false,layout:{padding:{top:20}},plugins:{legend:{position:'top',labels:{font:{size:10},color:TK,boxWidth:12,usePointStyle:true,padding:14}},datalabels:{display:ctx=>ctx.dataset.data[ctx.dataIndex]>=9,anchor:'top',align:'top',offset:2,formatter:v=>v,color:ctx=>ctx.dataset.borderColor,font:{size:10,weight:'700'}}},scales:{x:{ticks:{color:TK,font:{size:9},maxRotation:0,callback:(_,i)=>i%2===0?dias[i]:''},grid:{color:GR}},y:{ticks:{color:TK,font:{size:10}},grid:{color:GR},title:{display:true,text:'Pessoas',color:TK,font:{size:10}}}}}});
+
+{const _base=D?(D.total_ativos||D.total||1):1,_d=D?[D.pct,+(D.em_andamento/_base*100).toFixed(2),+(D.nao_iniciado/_base*100).toFixed(2)]:[73.20,8.68,18.11];
+P1_CHARTS.c6=new Chart(document.getElementById('c6'),{type:'doughnut',data:{labels:['Concluídos','Em Andamento','Não Iniciados'],datasets:[{data:_d,backgroundColor:[C.green,C.orange,C.red],borderWidth:3,borderColor:'#fff'}]},options:{responsive:false,cutout:'60%',plugins:{legend:{display:false},datalabels:{display:false}}}});}
+
+// Filtros interativos da Visão Geral
+const P1_ROWS = Array.isArray(D?.registros) ? D.registros : [];
+const P1_FILTER_IDS = ['p1-data','p1-turno','p1-setor','p1-tipo'];
+const _fmtBR = n => Number(n || 0).toLocaleString('pt-BR');
+const _norm = v => String(v ?? '').trim();
+const _statusOf = r => _norm(r.status).toUpperCase();
+const _isOk = st => st === 'COMPLETED' || st === 'COMPLETED_AFTER_DUE_DATE';
+const _monthNames = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+function _monthKey(v){
+  const s=_norm(v);
+  if(!s) return '';
+  const m=s.match(/^(\d{4})-(\d{2})/);
+  if(m) return `${m[1]}-${m[2]}`;
+  const br=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  if(br) return `${br[3]}-${String(br[2]).padStart(2,'0')}`;
+  return '';
+}
+function _monthLabel(key){
+  const [y,m]=key.split('-').map(Number);
+  return `${_monthNames[(m||1)-1]} ${y}`;
+}
+function _chart(id){ return P1_CHARTS[id] || (Chart.getChart ? Chart.getChart(document.getElementById(id)) : null); }
+function _setSelectOptions(id, values, labels){
+  const el=document.getElementById(id);
+  if(!el) return;
+  const current=el.value;
+  el.innerHTML='<option value="">Todos</option>';
+  values.forEach(v=>{
+    const opt=document.createElement('option');
+    opt.value=v;
+    opt.textContent=labels?.[v] || v;
+    el.appendChild(opt);
+  });
+  if([...el.options].some(o=>o.value===current)) el.value=current;
+}
+function _topGroups(rows, keyFn, n=20){
+  const map=new Map();
+  rows.forEach(r=>{
+    const k=_norm(keyFn(r)) || 'Não informado';
+    if(!map.has(k)) map.set(k, []);
+    map.get(k).push(r);
+  });
+  return [...map.entries()]
+    .map(([label, list])=>({label, list}))
+    .sort((a,b)=>b.list.length-a.list.length)
+    .slice(0,n);
+}
+function _filteredP1Rows(){
+  const f={
+    data: document.getElementById('p1-data')?.value || '',
+    turno: document.getElementById('p1-turno')?.value || '',
+    setor: document.getElementById('p1-setor')?.value || '',
+    tipo: document.getElementById('p1-tipo')?.value || '',
+  };
+  return P1_ROWS.filter(r=>{
+    const rowMonth=_monthKey(r.data_conclusao) || _monthKey(r.data_matricula);
+    return (!f.data || rowMonth===f.data)
+      && (!f.turno || _norm(r.turno)===f.turno)
+      && (!f.setor || _norm(r.setor)===f.setor)
+      && (!f.tipo || _norm(r.tipo)===f.tipo);
+  });
+}
+function _updateP1Charts(rows){
+  const total=rows.length;
+  const hasP1Filter=!!(
+    document.getElementById('p1-data')?.value ||
+    document.getElementById('p1-turno')?.value ||
+    document.getElementById('p1-setor')?.value ||
+    document.getElementById('p1-tipo')?.value
+  );
+  const userMap=new Map();
+  rows.forEach(r=>{
+    const mat=_norm(r.mat);
+    if(!mat) return;
+    if(!userMap.has(mat)) userMap.set(mat, []);
+    userMap.get(mat).push(_statusOf(r));
+  });
+  const jslRows=rows.filter(r=>_norm(r.filial_missao)==='JSL/GRU');
+  const completed=[...userMap.values()].filter(sts=>sts.length && sts.every(st=>_isOk(st)||st==='CANCELLED')).length;
+  const inProgressRows=rows.filter(r=>_statusOf(r)==='IN_PROGRESS');
+  const notStartedRows=rows.filter(r=>['NOT_STARTED','NAO MATRICULADO','NÃO MATRICULADO'].includes(_statusOf(r)));
+  const activeUsers=hasP1Filter ? new Set(rows.map(r=>_norm(r.mat)).filter(Boolean)).size : (Number(D.total_ativos)||new Set(rows.map(r=>_norm(r.mat)).filter(Boolean)).size);
+  const inProgressUsers=[...userMap.values()].filter(sts=>sts.includes('IN_PROGRESS')).length;
+  const notStartedUsers=[...userMap.values()].filter(sts=>!sts.includes('IN_PROGRESS') && sts.includes('NOT_STARTED')).length;
+  const minutes=rows.reduce((sum,r)=>sum+(Number(r.minutos)||0),0);
+  const pctOk=activeUsers ? +(completed/activeUsers*100).toFixed(2) : 0;
+  const pctAnd=activeUsers ? +(inProgressUsers/activeUsers*100).toFixed(2) : 0;
+  const pctNs=activeUsers ? +(notStartedUsers/activeUsers*100).toFixed(2) : 0;
+
+  document.getElementById('kv-total').textContent=_fmtBR(activeUsers);
+  document.getElementById('kv-ok').textContent=_fmtBR(completed);
+  document.getElementById('kv-and').textContent=_fmtBR(inProgressUsers);
+  document.getElementById('kv-ns').textContent=_fmtBR(notStartedUsers);
+  document.getElementById('kv-min').textContent=minutes>0 ? `${_fmtBR(minutes)} min` : '–';
+  document.getElementById('kd-ok').textContent=`${pctOk.toFixed(1)}% dos colaboradores`;
+  document.getElementById('rg-pct-ok').textContent=`${pctOk.toFixed(2)}%`;
+  document.getElementById('rg-ok').textContent=_fmtBR(completed);
+  document.getElementById('rg-pct-and').textContent=`${pctAnd.toFixed(2)}%`;
+  document.getElementById('rg-and').textContent=_fmtBR(inProgressUsers);
+  document.getElementById('rg-pct-ns').textContent=`${pctNs.toFixed(2)}%`;
+  document.getElementById('rg-ns').textContent=_fmtBR(notStartedUsers);
+
+  const c1=_chart('c1');
+  if(c1){ c1.data.datasets[0].data=[pctOk,pctNs,pctAnd]; c1.update(); }
+
+  const turnos=_topGroups(rows, r=>r.turno, 10).map(g=>{
+    const m=new Map();
+    g.list.forEach(r=>{
+      const mat=_norm(r.mat);
+      if(!mat) return;
+      if(!m.has(mat)) m.set(mat, []);
+      m.get(mat).push(_statusOf(r));
+    });
+    const vals=[...m.values()];
+    const ok=vals.filter(sts=>sts.length && sts.every(st=>_isOk(st)||st==='CANCELLED')).length;
+    return {label:g.label, pct:vals.length ? +(ok/vals.length*100).toFixed(1) : 0};
+  }).sort((a,b)=>b.pct-a.pct);
+  const c2=_chart('c2');
+  if(c2){
+    c2.data.labels=turnos.map(g=>g.label);
+    c2.data.datasets[0].data=turnos.map(g=>g.pct);
+    c2.data.datasets[0].backgroundColor=[C.blue,C.indigo,C.orange,C.pink,C.purple,C.green,C.red].slice(0,turnos.length);
+    c2.update();
+  }
+
+  const statusGroups=[
+    {label:'COMPLETED', list:Array(completed).fill(0)},
+    {label:'IN_PROGRESS', list:Array(inProgressUsers).fill(0)},
+    {label:'NOT_STARTED', list:Array(notStartedUsers).fill(0)}
+  ].filter(g=>g.list.length);
+  const c3=_chart('c3');
+  if(c3){
+    c3.data.labels=statusGroups.map(g=>g.label);
+    c3.data.datasets[0].data=statusGroups.map(g=>g.list.length);
+    c3.data.datasets[0].backgroundColor=[C.green,C.orange,C.red,C.blue,C.indigo,C.purple,C.pink].slice(0,statusGroups.length);
+    c3.update();
+  }
+
+  const miss=_topGroups(rows, r=>r.missao, 10).map(g=>({
+    label:g.label.length>30?g.label.slice(0,28)+'…':g.label,
+    ok:g.list.filter(r=>_isOk(_statusOf(r))).length,
+    pend:g.list.filter(r=>!_isOk(_statusOf(r)) && _statusOf(r)!=='CANCELLED').length,
+    total:g.list.length
+  })).sort((a,b)=>b.pend-a.pend);
+  const c4=_chart('c4');
+  if(c4){
+    c4.data.labels=miss.map(g=>g.label);
+    c4.data.datasets[0].data=miss.map(g=>g.pend);
+    c4.data.datasets[1].data=miss.map(g=>g.ok);
+    c4.options.plugins.datalabels.formatter=(_,ctx)=>miss[ctx.dataIndex]?.total ?? 0;
+    c4.update();
+  }
+
+  const byDay=new Map();
+  rows.filter(r=>_isOk(_statusOf(r))).forEach(r=>{
+    const d=_norm(r.data_conclusao).slice(0,10) || 'Sem data';
+    byDay.set(d,(byDay.get(d)||0)+1);
+  });
+  const days=[...byDay.keys()].sort().slice(-14);
+  const c5=_chart('c5');
+  if(c5){
+    c5.data.labels=days.length?days:['Sem dados'];
+    c5.data.datasets=[{label:'Concluídos',borderColor:C.blue,backgroundColor:C.blue+'15',data:days.length?days.map(d=>byDay.get(d)): [0],tension:0.35,pointRadius:3.5,pointBackgroundColor:C.blue,pointHoverRadius:5,fill:false,borderWidth:2}];
+    c5.update();
+  }
+
+  const c6=_chart('c6');
+  if(c6){ c6.data.datasets[0].data=[pctOk,pctAnd,pctNs]; c6.update(); }
+}
+function initP1Filters(){
+  if(!P1_ROWS.length) return;
+  const monthLabels={};
+  const months=[...new Set(P1_ROWS.map(r=>_monthKey(r.data_conclusao)||_monthKey(r.data_matricula)).filter(Boolean))].sort();
+  months.forEach(m=>monthLabels[m]=_monthLabel(m));
+  _setSelectOptions('p1-data', months, monthLabels);
+  _setSelectOptions('p1-turno', [...new Set(P1_ROWS.map(r=>_norm(r.turno)).filter(Boolean))].sort());
+  _setSelectOptions('p1-setor', [...new Set(P1_ROWS.map(r=>_norm(r.setor)).filter(Boolean))].sort());
+  _setSelectOptions('p1-tipo', [...new Set(P1_ROWS.map(r=>_norm(r.tipo)).filter(Boolean))].sort());
+  P1_FILTER_IDS.forEach(id=>document.getElementById(id)?.addEventListener('change',()=>_updateP1Charts(_filteredP1Rows())));
+  document.getElementById('p1-clear')?.addEventListener('click',()=>{
+    P1_FILTER_IDS.forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+    _updateP1Charts(P1_ROWS);
+  });
+  _updateP1Charts(P1_ROWS);
+}
+initP1Filters();
+
+// ── PAGE 2
+// Exclui concluídos (COMPLETED e COMPLETED_AFTER_DUE_DATE) da lista de pendentes
+const PEND_ROWS = (D?.colaboradores_pendentes ?? []).filter(r => !_isOk((r.status||'').toUpperCase()));
+const P2_CHARTS = {};
+const P3_CHARTS = {};
+window.P2_CHARTS = P2_CHARTS;
+window.P3_CHARTS = P3_CHARTS;
+let P2_TABLE_ROWS = PEND_ROWS.map(r=>[r.mat,r.nome,r.gestor,r.depto,r.turno,r.missao,r.status]);
+let P3_TABLE_ROWS = [];
+
+function _fillPendFilters(prefix){
+  const rows=PEND_ROWS;
+  _setSelectOptions(`${prefix}-gestor`, [...new Set(rows.map(r=>_norm(r.gestor)).filter(Boolean))].sort());
+  _setSelectOptions(`${prefix}-setor`, [...new Set(rows.map(r=>_norm(r.depto)).filter(Boolean))].sort());
+  _setSelectOptions(`${prefix}-turno`, [...new Set(rows.map(r=>_norm(r.turno)).filter(Boolean))].sort());
+  _setSelectOptions(`${prefix}-status`, [...new Set(rows.map(r=>_norm(r.status)).filter(Boolean))].sort());
+  _setSelectOptions(`${prefix}-treinamento`, [...new Set(rows.map(r=>_norm(r.missao)).filter(Boolean))].sort());
+}
+
+function _filteredPendRows(prefix){
+  const f={
+    gestor: document.getElementById(`${prefix}-gestor`)?.value || '',
+    setor: document.getElementById(`${prefix}-setor`)?.value || '',
+    turno: document.getElementById(`${prefix}-turno`)?.value || '',
+    status: document.getElementById(`${prefix}-status`)?.value || '',
+    treinamento: document.getElementById(`${prefix}-treinamento`)?.value || '',
+  };
+  return PEND_ROWS.filter(r=>
+    (!f.gestor || _norm(r.gestor)===f.gestor) &&
+    (!f.setor || _norm(r.depto)===f.setor) &&
+    (!f.turno || _norm(r.turno)===f.turno) &&
+    (!f.status || _norm(r.status)===f.status) &&
+    (!f.treinamento || _norm(r.missao)===f.treinamento)
+  );
+}
+
+function _statusCounts(rows){
+  const ip=rows.filter(r=>_norm(r.status)==='IN_PROGRESS').length;
+  const ns=rows.filter(r=>_norm(r.status)==='NOT_STARTED').length;
+  return {ip, ns, total: ip+ns || 1};
+}
+
+function _uniqRowsByMat(rows){
+  const map=new Map();
+  rows.forEach(r=>{
+    const key=_norm(r.mat);
+    if(!key) return;
+    const old=map.get(key);
+    if(!old || old.status!=='NOT_STARTED') map.set(key,r);
+    if(r.status==='NOT_STARTED') map.set(key,r);
+  });
+  return [...map.values()];
+}
+
+function updateP2(rows){
+  const fmt=n=>Number(n||0).toLocaleString('pt-BR');
+  const uniqColab=new Set(rows.map(r=>r.mat).filter(Boolean)).size;
+  const uniqGest=new Set(rows.map(r=>r.gestor).filter(Boolean)).size;
+  const uniqTrain=new Set(rows.map(r=>r.missao).filter(Boolean)).size;
+  const counts=_statusCounts(rows);
+
+  document.getElementById('p2-kv-pend').textContent=fmt(rows.length);
+  document.getElementById('p2-kd-pend').textContent=`${fmt(rows.length)} treinamentos pendentes`;
+  document.getElementById('p2-kv-colab').textContent=fmt(uniqColab);
+  document.getElementById('p2-kv-gest').textContent=fmt(uniqGest);
+  document.getElementById('p2-kv-train').textContent=fmt(uniqTrain);
+  document.getElementById('p2-sd-val').textContent=fmt(rows.length);
+  document.getElementById('p2-sl-ip').textContent=fmt(counts.ip);
+  document.getElementById('p2-sl-ip-pct').textContent=(counts.ip/counts.total*100).toFixed(1)+'% do total';
+  document.getElementById('p2-sl-ns').textContent=fmt(counts.ns);
+  document.getElementById('p2-sl-ns-pct').textContent=(counts.ns/counts.total*100).toFixed(1)+'% do total';
+
+  // Top gestores: ordena e conta por colaborador ÚNICO (não por linha de matrícula)
+  const gestores=_topGroups(rows, r=>r.gestor, 50)
+    .map(g=>({ label:g.label, count:new Set(g.list.map(r=>r.mat).filter(Boolean)).size }))
+    .sort((a,b)=>b.count-a.count)
+    .slice(0,12);
+  if(P2_CHARTS.c7){
+    P2_CHARTS.c7.data.labels=gestores.map(g=>g.label);
+    P2_CHARTS.c7.data.datasets[0].data=gestores.map(g=>g.count);
+    P2_CHARTS.c7.update();
+  }
+  if(P2_CHARTS.c8){
+    P2_CHARTS.c8.data.datasets[0].data=[counts.ip, counts.ns];
+    P2_CHARTS.c8.update();
+  }
+
+  P2_TABLE_ROWS=rows.map(r=>[r.mat,r.nome,r.gestor,r.depto,r.turno,r.missao,r.status]);
+  renderTbl(1);
+}
+
+function initP2Filters(){
+  if(document.getElementById('p2-gestor')?.dataset.ready) return;
+  _fillPendFilters('p2');
+  ['p2-gestor','p2-setor','p2-turno','p2-status','p2-treinamento'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el){el.dataset.ready='1';el.addEventListener('change',()=>updateP2(_filteredPendRows('p2')));}
+  });
+  document.getElementById('p2-clear')?.addEventListener('click',()=>{
+    ['p2-gestor','p2-setor','p2-turno','p2-status','p2-treinamento'].forEach(id=>{const el=document.getElementById(id); if(el) el.value='';});
+    updateP2(PEND_ROWS);
+  });
+}
+
+function updateP3(rows){
+  const fmt=n=>Number(n||0).toLocaleString('pt-BR');
+  const unique=_uniqRowsByMat(rows);
+  const counts=_statusCounts(rows);
+  const uniqTurnos=new Set(rows.map(r=>r.turno).filter(Boolean)).size;
+
+  document.getElementById('p3-kv-colab').textContent=fmt(unique.length);
+  document.getElementById('p3-kv-ns').textContent=fmt(counts.ns);
+  document.getElementById('p3-kd-ns').textContent=(counts.ns/counts.total*100).toFixed(1)+'% do total';
+  document.getElementById('p3-kv-and').textContent=fmt(counts.ip);
+  document.getElementById('p3-kd-and').textContent=(counts.ip/counts.total*100).toFixed(1)+'% do total';
+  document.getElementById('p3-kv-turnos').textContent=fmt(uniqTurnos);
+  document.getElementById('p3-sd-val').textContent=fmt(rows.length);
+  document.getElementById('p3-sl-ns').textContent=fmt(counts.ns);
+  document.getElementById('p3-sl-ns-pct').textContent=(counts.ns/counts.total*100).toFixed(1)+'% do total';
+  document.getElementById('p3-sl-ip').textContent=fmt(counts.ip);
+  document.getElementById('p3-sl-ip-pct').textContent=(counts.ip/counts.total*100).toFixed(1)+'% do total';
+
+  const turnos=_topGroups(rows, r=>r.turno, 50)
+    .map(g=>({ label:g.label, count:new Set(g.list.map(r=>r.mat).filter(Boolean)).size }))
+    .sort((a,b)=>b.count-a.count)
+    .slice(0,12);
+  if(P3_CHARTS.c9){
+    P3_CHARTS.c9.data.labels=turnos.map(g=>g.label);
+    P3_CHARTS.c9.data.datasets[0].data=turnos.map(g=>g.count);
+    P3_CHARTS.c9.update();
+  }
+  if(P3_CHARTS.c10){
+    P3_CHARTS.c10.data.datasets[0].data=[counts.ns, counts.ip];
+    P3_CHARTS.c10.update();
+  }
+
+  P3_TABLE_ROWS=unique.map(r=>[r.mat,r.nome,r.depto,r.turno,r.gestor,r.status]);
+  renderTbl3(1);
+}
+
+function initP3Filters(){
+  if(document.getElementById('p3-turno')?.dataset.ready) return;
+  _fillPendFilters('p3');
+  ['p3-turno','p3-setor','p3-gestor','p3-status','p3-treinamento'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el){el.dataset.ready='1';el.addEventListener('change',()=>updateP3(_filteredPendRows('p3')));}
+  });
+  document.getElementById('p3-clear')?.addEventListener('click',()=>{
+    ['p3-turno','p3-setor','p3-gestor','p3-status','p3-treinamento'].forEach(id=>{const el=document.getElementById(id); if(el) el.value='';});
+    updateP3(PEND_ROWS);
+  });
+}
+
+function initP2(){
+  {const _lb=D?.gestores?.labels??['E. João Gama Teixeira','Gabriel Luiz C. dos Santos','Mauro Silvestre Vieira','João Carlos de Souza','José Luiz dos Santos Junior','Rogério de Freitas Timanteo','Carlos Eduardo O. da Cunha','Diego Romero Vieira'],_vl=D?.gestores?.values??[156,134,112,98,87,74,61,56];
+  P2_CHARTS.c7=new Chart(document.getElementById('c7'),{type:'bar',data:{labels:_lb,datasets:[{data:_vl,backgroundColor:C.red,borderRadius:6,borderSkipped:false}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,layout:{padding:{right:44}},plugins:{legend:{display:false},datalabels:{anchor:'end',align:'end',offset:6,formatter:v=>v,color:TK,font:{size:11,weight:'700'}}},scales:{x:{ticks:{color:TK,font:{size:10}},grid:{color:GR}},y:{ticks:{color:TK,font:{size:10.5}},grid:{display:false}}}}});}
+
+  // Donut pendências: IN_PROGRESS vs NOT_STARTED contados dos colaboradores pendentes
+  {const _cp=D?.colaboradores_pendentes??[];
+  const _ip=_cp.length?_cp.filter(r=>r.status==='IN_PROGRESS').length:612;
+  const _ns=_cp.length?_cp.filter(r=>r.status==='NOT_STARTED').length:623;
+  P2_CHARTS.c8=new Chart(document.getElementById('c8'),{type:'doughnut',data:{labels:['IN_PROGRESS','NOT_STARTED'],datasets:[{data:[_ip,_ns],backgroundColor:[C.orange,C.red],borderWidth:3,borderColor:'#fff'}]},options:{responsive:false,cutout:'62%',plugins:{legend:{display:false},datalabels:{display:false}}}});
+  // Atualiza legenda textual do donut
+  const _tot2=_ip+_ns||1;
+  const _e2=id=>document.getElementById(id);
+  if(_e2('p2-sd-val'))  _e2('p2-sd-val').textContent=(_ip+_ns).toLocaleString('pt-BR');
+  if(_e2('p2-sl-ip'))   _e2('p2-sl-ip').textContent=_ip.toLocaleString('pt-BR');
+  if(_e2('p2-sl-ip-pct')) _e2('p2-sl-ip-pct').textContent=(_ip/_tot2*100).toFixed(1)+'% do total';
+  if(_e2('p2-sl-ns'))   _e2('p2-sl-ns').textContent=_ns.toLocaleString('pt-BR');
+  if(_e2('p2-sl-ns-pct')) _e2('p2-sl-ns-pct').textContent=(_ns/_tot2*100).toFixed(1)+'% do total';
+
+  initP2Filters();
+  updateP2(PEND_ROWS);
+}
+}
+
+// ── TABLE page 2 — usa colaboradores_pendentes reais
+let pp=10, cp=1;
+
+function renderTbl(page){
+  cp=page;
+  const total=P2_TABLE_ROWS.length;
+  if(!total){
+    document.getElementById('tb').innerHTML='<tr><td colspan="7" style="text-align:center;padding:20px;color:#94a3b8">Nenhum registro pendente encontrado</td></tr>';
+    document.getElementById('pi').textContent='';
+    document.getElementById('pb').innerHTML='';
+    return;
+  }
+  const from=(page-1)*pp, to=Math.min(page*pp,total);
+  const rows=P2_TABLE_ROWS.slice(from,to);
+  document.getElementById('tb').innerHTML=rows.map(r=>`<tr>
+    <td><strong>${r[0]||''}</strong></td><td>${r[1]||''}</td><td>${r[2]||''}</td><td>${r[3]||''}</td><td>${r[4]||''}</td>
+    <td style="max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${r[5]||''}">${r[5]||''}</td>
+    <td>${r[6]==='IN_PROGRESS'?'<span class="bg-o">IN_PROGRESS</span>':'<span class="bg-r">NOT_STARTED</span>'}</td>
+  </tr>`).join('');
+  document.getElementById('pi').textContent=`Mostrando ${from+1} a ${to} de ${total.toLocaleString('pt-BR')} registros`;
+  buildPag(page, Math.ceil(total/pp));
+}
+
+function buildPag(cur, tot){
+  const el=document.getElementById('pb');
+  el.innerHTML='';
+  const mk=(lbl,pg,cls)=>{const b=document.createElement('button');b.className='pb'+(cls?' '+cls:'')+(pg===cur?' on':'');b.textContent=lbl;if(pg&&pg!==cur)b.onclick=()=>renderTbl(pg);else if(!pg)b.className='pb el';el.appendChild(b);};
+  mk('‹',Math.max(1,cur-1));
+  const ps=cur<=4?[1,2,3,4,5,'…',tot]:cur>=tot-3?[1,'…',...Array.from({length:5},(_,i)=>tot-4+i)]:[1,'…',cur-1,cur,cur+1,'…',tot];
+  ps.forEach(p=>p==='…'?mk('…',null,'el'):mk(p,p));
+  mk('›',Math.min(tot,cur+1));
+}
+
+function cpp(n){pp=parseInt(n);renderTbl(1);}
+
+// ── PAGE 3
+function initP3(){
+  P3_CHARTS.c9=new Chart(document.getElementById('c9'),{
+    type:'bar',
+    data:{
+      labels:D?.turnos_pend?.labels??['ADM','AFASTADO','ALFA','BRAVO','CHARLIE','DEFINIR','Erro de Escala'],
+      datasets:[{data:D?.turnos_pend?.values??[4,2,2,2,1,1,2],backgroundColor:'#dc2626',borderRadius:6,borderSkipped:false}]
+    },
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+      layout:{padding:{right:40}},
+      plugins:{legend:{display:false},
+        datalabels:{anchor:'end',align:'end',offset:6,formatter:v=>v,color:TK,font:{size:12,weight:'700'}}},
+      scales:{x:{ticks:{color:TK,font:{size:10}},grid:{color:GR},min:0},
+              y:{ticks:{color:TK,font:{size:11}},grid:{display:false}}}}
+  });
+
+  {const _cp=D?.colaboradores_pendentes??[];
+  const _ns=_cp.filter(r=>r.status==='NOT_STARTED').length||0;
+  const _ip=_cp.filter(r=>r.status==='IN_PROGRESS').length||0;
+  const _tot3=_ns+_ip||1;
+  // Colaboradores únicos com pendência
+  const _uniqC3=new Set(_cp.map(r=>r.mat)).size;
+  const _uniqT3=new Set(_cp.map(r=>r.turno).filter(Boolean)).size;
+  // Preenche KPIs Page 3
+  const _fmt3=n=>n==null?'–':Number(n).toLocaleString('pt-BR');
+  const _e=id=>document.getElementById(id);
+  if(_e('p3-kv-colab')){
+    _e('p3-kv-colab').textContent=_fmt3(_uniqC3);
+    _e('p3-kv-ns').textContent=_fmt3(_ns);
+    _e('p3-kd-ns').textContent=(_ns/_tot3*100).toFixed(1)+'% do total';
+    _e('p3-kv-and').textContent=_fmt3(_ip);
+    _e('p3-kd-and').textContent=(_ip/_tot3*100).toFixed(1)+'% do total';
+    _e('p3-kv-turnos').textContent=_fmt3(_uniqT3);
+  }
+  // Donut c10
+  P3_CHARTS.c10=new Chart(document.getElementById('c10'),{
+    type:'doughnut',
+    data:{labels:['NOT_STARTED','IN_PROGRESS'],
+      datasets:[{data:[_ns,_ip],backgroundColor:['#dc2626','#ea580c'],borderWidth:3,borderColor:'#fff'}]},
+    options:{responsive:false,cutout:'62%',
+      plugins:{legend:{display:false},datalabels:{display:false}}}
+  });
+  // Donut legend
+  if(_e('p3-sd-val')){
+    _e('p3-sd-val').textContent=(_ns+_ip).toLocaleString('pt-BR');
+    _e('p3-sl-ns').textContent=_ns.toLocaleString('pt-BR');
+    _e('p3-sl-ns-pct').textContent=(_ns/_tot3*100).toFixed(1)+'% do total';
+    _e('p3-sl-ip').textContent=_ip.toLocaleString('pt-BR');
+    _e('p3-sl-ip-pct').textContent=(_ip/_tot3*100).toFixed(1)+'% do total';
+  }}
+
+  initP3Filters();
+  updateP3(PEND_ROWS);
+}
+
+// ── TABLE page 3 — colaboradores únicos pendentes (1 linha por pessoa, status mais grave)
+const _rawP3=(D?.colaboradores_pendentes??[]);
+// Agrupado por matrícula: pega a primeira ocorrência por colaborador
+const _mapP3=new Map();
+_rawP3.forEach(r=>{if(!_mapP3.has(r.mat))_mapP3.set(r.mat,r);});
+const D3=Array.from(_mapP3.values()).map(r=>[r.mat,r.nome,r.depto,r.turno,r.gestor,r.status]);
+P3_TABLE_ROWS = D3.slice();
+let pp3=10, cp3=1;
+
+function renderTbl3(page){
+  cp3=page;
+  if(!P3_TABLE_ROWS.length){
+    document.getElementById('tb3').innerHTML='<tr><td colspan="6" style="text-align:center;padding:20px;color:#94a3b8">Nenhum colaborador pendente encontrado</td></tr>';
+    document.getElementById('pi3').textContent='';
+    document.getElementById('pb3').innerHTML='';
+    return;
+  }
+  const from=(page-1)*pp3, to=Math.min(page*pp3,P3_TABLE_ROWS.length);
+  const rows=P3_TABLE_ROWS.slice(from,to);
+  document.getElementById('tb3').innerHTML=rows.map(r=>`<tr>
+    <td><strong>${r[0]||''}</strong></td><td>${r[1]||''}</td><td>${r[2]||''}</td><td>${r[3]||''}</td><td>${r[4]||''}</td>
+    <td>${r[5]==='IN_PROGRESS'?'<span class="bg-o">EM ANDAMENTO</span>':'<span class="bg-r">NÃO INICIADO</span>'}</td>
+  </tr>`).join('');
+  document.getElementById('pi3').textContent=`Mostrando ${from+1} a ${to} de ${P3_TABLE_ROWS.length.toLocaleString('pt-BR')} registros`;
+  buildPag3(page, Math.ceil(P3_TABLE_ROWS.length/pp3));
+}
+
+function buildPag3(cur,tot){
+  const el=document.getElementById('pb3'); el.innerHTML='';
+  const mk=(lbl,pg,cls)=>{const b=document.createElement('button');b.className='pb'+(cls?' '+cls:'')+(pg===cur?' on':'');b.textContent=lbl;if(pg&&pg!==cur)b.onclick=()=>renderTbl3(pg);else if(!pg)b.className='pb el';el.appendChild(b);};
+  mk('‹',Math.max(1,cur-1));
+  Array.from({length:tot},(_,i)=>i+1).forEach(p=>mk(p,p));
+  mk('›',Math.min(tot,cur+1));
+}
+function cpp3(n){pp3=parseInt(n);renderTbl3(1);}
+
+// ── PAGE 5 — colaboradores únicos pendentes
+const P5_CHARTS = {};
+window.P5_CHARTS = P5_CHARTS;
+let P5_ROWS = PEND_ROWS.slice();
+let P5_TABLE_ROWS = _uniqRowsByMat(P5_ROWS).map(r=>[r.mat,r.nome,r.cargo,r.depto]);
+let pp5=15, cp5=1;
+
+function renderTbl5(page){
+  cp5=page;
+  const total=P5_TABLE_ROWS.length;
+  if(!total){
+    document.getElementById('tb5').innerHTML='<tr><td colspan="4" style="text-align:center;padding:20px;color:#94a3b8">Nenhum colaborador pendente encontrado</td></tr>';
+    document.getElementById('pi5').textContent='';
+    document.getElementById('pb5').innerHTML='';
+    return;
+  }
+  const from=(page-1)*pp5, to=Math.min(page*pp5,total);
+  const rows=P5_TABLE_ROWS.slice(from,to);
+  document.getElementById('tb5').innerHTML=rows.map(r=>`<tr>
+    <td><strong>${r[0]||''}</strong></td><td>${r[1]||''}</td>
+    <td style="color:var(--g500)">${r[2]||''}</td>
+    <td><span style="background:#fef2f2;color:#dc2626;padding:2px 9px;border-radius:20px;font-size:.7rem;font-weight:600">${r[3]||''}</span></td>
+  </tr>`).join('');
+  document.getElementById('pi5').textContent=`${from+1} - ${to} de ${total.toLocaleString('pt-BR')}`;
+  buildPag5(page, Math.ceil(total/pp5));
+}
+
+function buildPag5(cur,tot){
+  const el=document.getElementById('pb5'); el.innerHTML='';
+  const mk=(lbl,pg,cls)=>{const b=document.createElement('button');b.className='pb'+(cls?' '+cls:'')+(pg===cur?' on':'');b.textContent=lbl;if(pg&&pg!==cur)b.onclick=()=>renderTbl5(pg);else if(!pg)b.className='pb el';el.appendChild(b);};
+  mk('‹',Math.max(1,cur-1));
+  const ps=cur<=4?[1,2,3,4,5,'…',tot]:cur>=tot-3?[1,'…',...Array.from({length:5},(_,i)=>tot-4+i)]:[1,'…',cur-1,cur,cur+1,'…',tot];
+  ps.forEach(p=>p==='…'?mk('…',null,'el'):mk(p,p));
+  mk('›',Math.min(tot,cur+1));
+}
+
+function _selectedP5Missions(){
+  return [...document.querySelectorAll('#p5-tlist input[type=checkbox]:checked')].map(i=>i.value);
+}
+
+function _filteredP5Rows(){
+  const selected=_selectedP5Missions();
+  return selected.length ? PEND_ROWS.filter(r=>selected.includes(_norm(r.missao))) : [];
+}
+
+function _renderP5Legend(labels, values, colors){
+  const total=values.reduce((a,b)=>a+b,0)||1;
+  const val=document.getElementById('p5-sd-val');
+  if(val) val.textContent=total.toLocaleString('pt-BR');
+  const leg=document.getElementById('p5-donut-leg');
+  if(!leg) return;
+  leg.innerHTML=labels.map((l,i)=>{
+    const pct=(values[i]/total*100).toFixed(1);
+    return `<div style="display:flex;align-items:center;gap:8px">
+      <div style="width:9px;height:9px;border-radius:50%;background:${colors[i]};flex-shrink:0"></div>
+      <span style="font-size:.75rem;font-weight:600;color:${colors[i]};flex:1">${l}</span>
+      <span style="font-size:.75rem;font-weight:700;color:#334155">${values[i].toLocaleString('pt-BR')}</span>
+      <span style="font-size:.7rem;color:#94a3b8;min-width:44px;text-align:right">${pct}%</span>
+    </div>`;
+  }).join('');
+}
+
+function updateP5(rows){
+  P5_ROWS=rows;
+  const unique=_uniqRowsByMat(rows);
+  const missions=new Set(rows.map(r=>r.missao).filter(Boolean)).size;
+  const setores=new Set(rows.map(r=>r.depto).filter(Boolean)).size;
+  const fmt=n=>Number(n||0).toLocaleString('pt-BR');
+  document.getElementById('p5-kv-total').textContent=fmt(unique.length);
+  document.getElementById('p5-kv-miss').textContent=fmt(missions);
+  document.getElementById('p5-kv-setores').textContent=fmt(setores);
+  document.getElementById('p5-kv-pend').textContent=fmt(rows.length);
+
+  const setoresGrp=_topGroups(rows, r=>r.depto, 50)
+    .map(g=>({ label:g.label, count:new Set(g.list.map(r=>r.mat).filter(Boolean)).size }))
+    .sort((a,b)=>b.count-a.count)
+    .slice(0,8);
+  const setorLabels=setoresGrp.map(g=>g.label);
+  const setorValues=setoresGrp.map(g=>g.count);
+  const setorColors=[C.red,C.purple,C.orange,C.blue,C.green,'#94a3b8','#db2777','#4338ca'].slice(0,setorLabels.length);
+  if(P5_CHARTS.c13){
+    P5_CHARTS.c13.data.labels=setorLabels;
+    P5_CHARTS.c13.data.datasets[0].data=setorValues;
+    P5_CHARTS.c13.data.datasets[0].backgroundColor=setorColors;
+    P5_CHARTS.c13.update();
+  }
+  _renderP5Legend(setorLabels, setorValues, setorColors);
+
+  const cargos=_topGroups(rows, r=>r.cargo, 50)
+    .map(g=>({ label:g.label, count:new Set(g.list.map(r=>r.mat).filter(Boolean)).size }))
+    .sort((a,b)=>b.count-a.count)
+    .slice(0,8);
+  if(P5_CHARTS.c14){
+    P5_CHARTS.c14.data.labels=cargos.map(g=>g.label);
+    P5_CHARTS.c14.data.datasets[0].data=cargos.map(g=>g.count);
+    P5_CHARTS.c14.update();
+  }
+
+  P5_TABLE_ROWS=unique.map(r=>[r.mat,r.nome,r.cargo,r.depto]);
+  renderTbl5(1);
+}
+
+function _renderP5MissionList(){
+  const list=document.getElementById('p5-tlist');
+  const count=document.getElementById('p5-count');
+  if(!list) return;
+  const query=_norm(document.getElementById('p5-search')?.value).toLowerCase();
+  const missions=[...new Set(PEND_ROWS.map(r=>_norm(r.missao)).filter(Boolean))].sort();
+  const visible=missions.filter(m=>!query || m.toLowerCase().includes(query));
+  const selected=new Set(_selectedP5Missions());
+  list.innerHTML=visible.map(m=>{
+    const checked=selected.size ? selected.has(m) : true;
+    return `<label class="p5-ti"><input type="checkbox" value="${m.replace(/"/g,'&quot;')}" ${checked?'checked':''}> ${m}</label>`;
+  }).join('');
+  if(count) count.textContent=`${missions.length.toLocaleString('pt-BR')} treinamentos`;
+  list.querySelectorAll('input[type=checkbox]').forEach(i=>i.addEventListener('change',()=>setTimeout(()=>updateP5(_filteredP5Rows()),0)));
+}
+
+function initP5Filters(){
+  const search=document.getElementById('p5-search');
+  if(search?.dataset.ready) return;
+  _renderP5MissionList();
+  updateP5(_filteredP5Rows());
+  if(search){
+    search.dataset.ready='1';
+    search.addEventListener('input',()=>_renderP5MissionList());
+  }
+  document.getElementById('p5-clear')?.addEventListener('click',()=>{
+    if(search) search.value='';
+    _renderP5MissionList();
+    document.querySelectorAll('#p5-tlist input[type=checkbox]').forEach(i=>i.checked=true);
+    updateP5(_filteredP5Rows());
+  });
+}
+
+function initP5(){
+  // Donut por departamento/setor
+  {const _sd=D?.setor_donut;
+  const _lb=_sd?.labels?.length?_sd.labels:['IMPORTAÇÃO','VARIG','EXPORTAÇÃO','OPERAÇÕES','ADMINISTRATIVO','OUTROS'];
+  const _vl=_sd?.values?.length?_sd.values:[732,162,148,118,60,28];
+  const _bg=[C.red,C.purple,C.orange,C.blue,C.green,'#94a3b8','#db2777','#4338ca'].slice(0,_lb.length);
+  P5_CHARTS.c13=new Chart(document.getElementById('c13'),{
+    type:'doughnut',
+    data:{labels:_lb,datasets:[{data:_vl,backgroundColor:_bg,borderWidth:3,borderColor:'#fff'}]},
+    options:{responsive:false,cutout:'62%',plugins:{legend:{display:false},datalabels:{display:false}}}
+  });
+  // Legenda dinâmica
+  const _tot5=_vl.reduce((a,b)=>a+b,0)||1;
+  const _sdv5=document.getElementById('p5-sd-val');
+  if(_sdv5) _sdv5.textContent=_tot5.toLocaleString('pt-BR');
+  const _leg5=document.getElementById('p5-donut-leg');
+  if(_leg5) _leg5.innerHTML=_lb.map((l,i)=>{
+    const pct=(_vl[i]/_tot5*100).toFixed(1);
+    return `<div style="display:flex;align-items:center;gap:8px">
+      <div style="width:9px;height:9px;border-radius:50%;background:${_bg[i]};flex-shrink:0"></div>
+      <span style="font-size:.75rem;font-weight:600;color:${_bg[i]};flex:1">${l}</span>
+      <span style="font-size:.75rem;font-weight:700;color:#334155">${_vl[i].toLocaleString('pt-BR')}</span>
+      <span style="font-size:.7rem;color:#94a3b8;min-width:44px;text-align:right">${pct}%</span>
+    </div>`;
+  }).join('');}
+
+  // Bar top cargos
+  {const _cb=D?.cargo_bar;
+  const _lb=_cb?.labels?.length?_cb.labels:[['AUXILIAR DE','MOVIMENTAÇÃO II'],['INSPETOR','DE CARGA'],['MOTORISTA','OPERADOR'],['AUXILIAR DE','MOVIMENTAÇÃO I'],['OPERADOR DE','EMPILHADEIRA I']];
+  const _vl=_cb?.values?.length?_cb.values:[74,98,162,346,452];
+   P5_CHARTS.c14=new Chart(document.getElementById('c14'),{
+    type:'bar',
+    data:{labels:_lb,datasets:[{data:_vl,backgroundColor:C.red,borderRadius:6,borderSkipped:false}]},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,layout:{padding:{right:52}},
+      plugins:{legend:{display:false},datalabels:{anchor:'end',align:'end',offset:6,formatter:v=>v,color:TK,font:{size:11,weight:'700'}}},
+      scales:{x:{ticks:{color:TK,font:{size:10}},grid:{color:GR}},y:{ticks:{color:TK,font:{size:10}},grid:{display:false}}}}
+  });}
+
+  // KPIs P5
+  const _fmt5=n=>n==null?'–':Number(n).toLocaleString('pt-BR');
+  const _e5=id=>document.getElementById(id);
+  initP5Filters();
+  updateP5(PEND_ROWS);
+}
+
+// ── PAGE 4
+function _donutMissoes(canvasId, dados){
+  const _dados=dados || D?.missoes || {};
+  const _lb=_dados?.donut_labels??['Concluídos','Em Andamento','Não Iniciados'];
+  const _vl=_dados?.donut_values??[489,58,121];
+  return new Chart(document.getElementById(canvasId),{
+    type:'doughnut',
+    data:{labels:_lb,datasets:[{data:_vl,backgroundColor:[C.green,C.orange,C.red],borderWidth:3,borderColor:'#fff'}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'60%',
+      plugins:{legend:{position:'bottom',labels:{font:{size:10},color:TK,boxWidth:11,padding:8}},
+        datalabels:{formatter:(v,ctx)=>{const t=ctx.dataset.data.reduce((a,b)=>a+b,0);return(v/t*100).toFixed(1)+'%';},
+          color:'#fff',font:{size:10,weight:'700'},display:ctx=>ctx.dataset.data[ctx.dataIndex]>30}}}});
+}
+function _barMissoes(canvasId, dados){
+  const _dados=dados || D?.missoes || {};
+  const _lb=_dados?.bar_pendentes?.labels??['CONTROLE DE MUDANÇA','TREINAMENTOS','AUDITORIA INTERNA','EXCEL BÁSICO','SEGURANÇA NO TRAB.','LGPD BÁSICO','LIDERANÇA ESSENCIAL','DIREÇÃO DEFENSIVA','COMPLIANCE CORP.','INTEGRAÇÃO SIMPAR'];
+  const _vl=_dados?.bar_pendentes?.values??[347,301,261,220,194,167,140,120,93,60];
+  return new Chart(document.getElementById(canvasId),{
+    type:'bar',
+    data:{labels:_lb,datasets:[{data:_vl,backgroundColor:C.red,borderRadius:6,borderSkipped:false}]},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,layout:{padding:{right:48}},
+      plugins:{legend:{display:false},datalabels:{anchor:'end',align:'end',offset:6,formatter:v=>v,color:TK,font:{size:11,weight:'700'}}},
+      scales:{x:{ticks:{color:TK,font:{size:10}},grid:{color:GR}},y:{ticks:{color:TK,font:{size:10}},grid:{display:false}}}}});
+}
+// ── Ranking clicável — estado por listId
+const _rankMeta = {};   // { listId: { tblSelector, titleId, nomes[], detOrig } }
+
+function _rankClickIdx(listId, idx){
+  const meta = _rankMeta[listId];
+  if(!meta) return;
+  const missaoNome = meta.nomes[idx];
+
+  const listEl = document.getElementById(listId);
+  const allItems = listEl.querySelectorAll('.rank-item[data-idx]');
+
+  // Se clicou no mesmo que já está selecionado → deseleciona (volta)
+  if(meta.selecionado === idx){
+    allItems.forEach(el => el.classList.remove('rank-sel'));
+    meta.selecionado = -1;
+    _rankRestaurar(listId);
+    return;
+  }
+
+  // Marca selecionado
+  allItems.forEach(el => el.classList.remove('rank-sel'));
+  listEl.querySelector(`[data-idx="${idx}"]`)?.classList.add('rank-sel');
+  meta.selecionado = idx;
+
+  const tblBody = document.querySelector(meta.tblSelector);
+  const titleEl = document.getElementById(meta.titleId);
+  if(!tblBody) return;
+
+  // Salva html original na primeira vez que seleciona algo
+  if(!meta.detOrig){
+    const tbl = tblBody.closest('table');
+    meta.detOrig = {
+      thead: tbl.querySelector('thead tr').innerHTML,
+      tbody: tblBody.innerHTML,
+    };
+  }
+
+  // Filtra pendentes por missão — exclui qualquer status considerado concluído
+  const pend = (D?.colaboradores_pendentes || []).filter(r =>
+    r.missao === missaoNome && !_isOk((r.status || '').toUpperCase())
+  );
+
+  // Cabeçalho da tabela de pessoas
+  tblBody.closest('table').querySelector('thead tr').innerHTML =
+    '<th>#</th><th>Nome</th><th>Matrícula</th><th>Cargo</th><th>Turno</th><th>Gestor</th><th style="text-align:center">Status</th>';
+
+  if(pend.length === 0){
+    tblBody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#16a34a;font-weight:600;padding:20px">✓ Nenhum pendente para esta missão</td></tr>';
+  } else {
+    tblBody.innerHTML = pend.map((r, i) => {
+      const _st = (r.status||'').toUpperCase();
+      const sc = _isOk(_st) ? '#16a34a' : (_st==='IN_PROGRESS' ? '#ea580c' : '#dc2626');
+      const sb = _isOk(_st) ? '#f0fdf4' : (_st==='IN_PROGRESS' ? '#fff7ed' : '#fef2f2');
+      const sl = _isOk(_st) ? 'Concluído'
+               : _st==='IN_PROGRESS' ? 'Em Andamento'
+               : _st==='NOT_STARTED' ? 'Não Iniciado'
+               : (r.status || '–');
+      const nome = (r.nome||'–').replace(/</g,'&lt;');
+      const cargo = (r.cargo||'–').replace(/</g,'&lt;');
+      const gestor = (r.gestor||'–').replace(/</g,'&lt;');
+      return `<tr>
+        <td style="color:#9ca3af;font-size:.69rem;width:28px">${i+1}</td>
+        <td style="font-weight:500;font-size:.73rem">${nome}</td>
+        <td style="font-family:monospace;font-size:.7rem;color:#6b7280">${r.mat||'–'}</td>
+        <td style="font-size:.7rem;color:#6b7280">${cargo}</td>
+        <td style="font-size:.7rem">${r.turno||'–'}</td>
+        <td style="font-size:.7rem;color:#6b7280">${gestor}</td>
+        <td style="text-align:center"><span style="background:${sb};color:${sc};padding:2px 7px;border-radius:20px;font-size:.67rem;font-weight:700">${sl}</span></td>
+      </tr>`;
+    }).join('');
+  }
+
+  if(titleEl){
+    const nomeAbrev = missaoNome.length > 38 ? missaoNome.slice(0,36)+'…' : missaoNome;
+    titleEl.innerHTML = `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <button onclick="_rankVoltar('${listId}')" style="background:none;border:1px solid #dc2626;border-radius:5px;cursor:pointer;color:#dc2626;font-size:.68rem;font-weight:600;display:inline-flex;align-items:center;gap:3px;padding:2px 8px;line-height:1.8">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg> Voltar
+      </button>
+      <span>Pendentes — ${nomeAbrev}</span>
+      <span style="font-size:.7rem;font-weight:400;color:#6b7280">(${pend.length} pessoa${pend.length!==1?'s':''})</span>
+    </div>`;
+  }
+
+  // Atualiza visor lateral com Atribuível/Backup da missão clicada (somente p4)
+  if(listId === 'rank-list'){
+    const treinamentos = D?.matriz?.treinamentos || [];
+    const mIdx = treinamentos.findIndex(t => t.n === missaoNome || t.c === missaoNome);
+    if(mIdx >= 0) _p4VisorAtualizar(mIdx);
+  }
+}
+
+function _rankRestaurar(listId){
+  const meta = _rankMeta[listId];
+  if(!meta || !meta.detOrig) return;
+  const tblBody = document.querySelector(meta.tblSelector);
+  const titleEl = document.getElementById(meta.titleId);
+  if(tblBody){
+    const tbl = tblBody.closest('table');
+    tbl.querySelector('thead tr').innerHTML = meta.detOrig.thead;
+    tblBody.innerHTML = meta.detOrig.tbody;
+    meta.detOrig = null;
+  }
+  if(titleEl) titleEl.textContent = 'Detalhamento por Procedimento';
+}
+
+function _rankVoltar(listId){
+  const meta = _rankMeta[listId];
+  if(meta) meta.selecionado = -1;
+  document.getElementById(listId)?.querySelectorAll('.rank-item').forEach(el => el.classList.remove('rank-sel'));
+  _rankRestaurar(listId);
+  // Reseta visor para totais gerais ao voltar (somente p4)
+  if(listId === 'rank-list') _p4VisorAtualizar(-1);
+}
+
+function _renderRankMissoes(listId, tblSelector, mkIds, dados){
+  const _dados = dados || D?.missoes || {};
+  const _tab   = _dados?.tabela ?? [];
+  const _rank  = _dados?.ranking ?? [];
+  const fmt    = n => n==null ? '–' : Number(n).toLocaleString('pt-BR');
+  const _titleId = listId==='rank-list' ? 'p4-det-title' : 'p7-det-title';
+
+  // Registra metadados para este ranking
+  _rankMeta[listId] = {
+    tblSelector,
+    titleId: _titleId,
+    nomes: _rank.map(r => r.nome),
+    selecionado: -1,
+    detOrig: null,
+  };
+
+  // Ranking clicável
+  const _rEl = document.getElementById(listId);
+  if(_rEl && _rank.length){
+    _rEl.innerHTML = _rank.map((r, i) =>
+      `<div class="rank-item" data-idx="${i}" onclick="_rankClickIdx('${listId}',${i})">
+        <div class="rank-num">${r.pos}</div>
+        <div class="rank-body">
+          <div class="rank-name" title="${(r.nome||'').replace(/"/g,'&quot;')}">${r.nome.length>35?r.nome.slice(0,33)+'…':r.nome}</div>
+          <div class="rank-bw"><div class="rank-bf" style="width:${r.pct}%;background:${r.cor}"></div></div>
+        </div>
+        <div class="rank-pct" style="color:${r.cor}">${r.pct.toFixed(1)}%</div>
+      </div>`
+    ).join('') + '<div class="rank-hint">Clique em uma missão para ver os pendentes</div>';
+
+    const _rf = _rEl.parentElement.querySelector('.rank-foot');
+    if(_rf){
+      const _med = _dados?.media_pct ?? 0;
+      _rf.innerHTML = `<span>Total missões: ${_rank.length}</span><span>Média: ${_med.toFixed(1)}%</span>`;
+    }
+  }
+
+  // Tabela det-tbl (visão padrão por procedimento)
+  const _tbody = document.querySelector(tblSelector);
+  if(_tbody && _tab.length){
+    _tbody.innerHTML = _tab.map(r => {
+      const _bg = r.pct>=80?'#f0fdf4':(r.pct>=60?'#fff7ed':'#fef2f2');
+      const _pctSpan = `<span style="background:${_bg};color:${r.cor};padding:2px 8px;border-radius:20px;font-size:.7rem;font-weight:700">${r.pct.toFixed(1)}%</span>`;
+      return `<tr><td>${r.missao}</td><td style="text-align:right">${fmt(r.total)}</td><td style="text-align:right;color:#16a34a;font-weight:600">${fmt(r.concluidos)}</td><td style="text-align:right;color:#dc2626;font-weight:600">${fmt(r.pendentes)}</td><td style="text-align:right">${_pctSpan}</td></tr>`;
+    }).join('');
+    // Limpa estado ao recarregar
+    if(_rankMeta[listId]) _rankMeta[listId].detOrig = null;
+  }
+
+  // Mini-KPIs
+  if(mkIds&&_dados){
+    const _m=_dados;
+    const _e=id=>document.getElementById(id);
+    if(_e(mkIds.maior_v)){_e(mkIds.maior_v).textContent=(_m.maior_pct??0).toFixed(1)+'%';}
+    if(_e(mkIds.maior_d)){_e(mkIds.maior_d).textContent=(_m.maior_nome??'').slice(0,30);}
+    if(_e(mkIds.menor_v)){_e(mkIds.menor_v).textContent=(_m.menor_pct??0).toFixed(1)+'%';}
+    if(_e(mkIds.menor_d)){_e(mkIds.menor_d).textContent=(_m.menor_nome??'').slice(0,30);}
+    if(_e(mkIds.media_v)){_e(mkIds.media_v).textContent=(_m.media_pct??0).toFixed(1)+'%';}
+    if(_e(mkIds.media_d)){_e(mkIds.media_d).textContent='Média das '+(_m.total_missoes??0)+' missões';}
+  }
+}
+
+function _fillMissoesKPIs(prefix, dados){
+  if(!D) return;
+  const _dados=dados || D?.missoes || {};
+  const fmt=n=>n==null?'–':Number(n).toLocaleString('pt-BR');
+  const _e=id=>document.getElementById(id);
+  const _tot=_dados.total||1;
+  if(_e(prefix+'-kv-miss')) _e(prefix+'-kv-miss').textContent=fmt(_dados?.total_missoes);
+  if(_e(prefix+'-kv-ok'))  {_e(prefix+'-kv-ok').textContent=fmt(_dados.concluidos);_e(prefix+'-kd-ok').textContent=(_dados.pct??0)+'% do total';}
+  if(_e(prefix+'-kv-and')) {_e(prefix+'-kv-and').textContent=fmt(_dados.em_andamento);_e(prefix+'-kd-and').textContent=((_dados.em_andamento||0)/_tot*100).toFixed(2)+'% do total';}
+  if(_e(prefix+'-kv-ns'))  {_e(prefix+'-kv-ns').textContent=fmt(_dados.nao_iniciado);_e(prefix+'-kd-ns').textContent=((_dados.nao_iniciado||0)/_tot*100).toFixed(2)+'% do total';}
+  if(_e(prefix+'-kv-colab')) _e(prefix+'-kv-colab').textContent=fmt(D.total_ativos);
+}
+
+function _p4VisorAtualizar(missionIdx){
+  // missionIdx = -1 → Visão Geral (todos); >= 0 → missão específica
+  const matriz = D?.matriz || {};
+  const treinamentos = matriz.treinamentos || [];
+  const colaboradores = matriz.colaboradores || [];
+
+  const titulo = document.getElementById('p4-visor-titulo');
+  const elAtr  = document.getElementById('p4-v-atr');
+  const elBkp  = document.getElementById('p4-v-bkp');
+
+  let atr = 0, bkp = 0;
+
+  if(missionIdx === -1){
+    // Conta totais em todas as missões
+    colaboradores.forEach(c => {
+      (c.st || []).forEach(st => {
+        if(st === 'A') atr++;
+        else if(st === 'B') bkp++;
+      });
+    });
+    if(titulo) titulo.textContent = 'Totais — Visão Geral';
+  } else {
+    // Conta apenas para a missão selecionada
+    colaboradores.forEach(c => {
+      const st = (c.st || [])[missionIdx];
+      if(st === 'A') atr++;
+      else if(st === 'B') bkp++;
+    });
+    const nome = treinamentos[missionIdx]?.n || '';
+    const nomeAbrev = nome.length > 22 ? nome.slice(0, 20) + '…' : nome;
+    if(titulo) titulo.textContent = nomeAbrev;
+  }
+
+  if(elAtr) elAtr.textContent = atr;
+  if(elBkp) elBkp.textContent = bkp;
+}
+
+function initP4Sidebar(){
+  const menu = document.getElementById('p4-nav-menu');
+  if(!menu) return;
+
+  // Sidebar só com Visão Geral — missões são acessadas pelo ranking
+  menu.innerHTML = `<div class="nav-item nav-on">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+    Visão Geral
+  </div>`;
+
+  // Inicializa visor com totais gerais
+  _p4VisorAtualizar(-1);
+}
+
+function initP4(){
+  const dados=D?.missoes_jsl || D?.missoes;
+  _donutMissoes('c11', dados); _barMissoes('c12', dados);
+  _renderRankMissoes('rank-list','#p4 .det-tbl tbody',{maior_v:'p4-mk1v',maior_d:'p4-mk1d',menor_v:'p4-mk2v',menor_d:'p4-mk2d',media_v:'p4-mk3v',media_d:'p4-mk3d'}, dados);
+  _fillMissoesKPIs('p4', dados);
+  initP4Sidebar();
+}
+
+function initP7(){
+  const dados=D?.missoes_simpar || D?.missoes;
+  _donutMissoes('c15', dados); _barMissoes('c16', dados);
+  _renderRankMissoes('rank-list7','#p7 .det-tbl tbody',{maior_v:'p7-mk1v',maior_d:'p7-mk1d',menor_v:'p7-mk2v',menor_d:'p7-mk2d',media_v:'p7-mk3v',media_d:'p7-mk3d'}, dados);
+  _fillMissoesKPIs('p7', dados);
+}
+
+// ── PAGE 6: MATRIZ
+const TRAINS6_FALLBACK=[
+  {c:'PRO9205',    n:'Auditoria Interna e Auto Inspeção',   g:'ssma'},
+  {c:'PRO9206',    n:'Boas Práticas de Documentação',        g:'ssma'},
+  {c:'PRO-GRU0010',n:'Controle de Mudança',                 g:'ssma'},
+  {c:'PRO-GRU0002',n:'Informação Documentada',              g:'ssma'},
+  {c:'PRO-GRU0003',n:'Não Conformidade e Ação Corretiva',   g:'ssma'},
+  {c:'PRO9201',    n:'Classificação',                        g:'man'},
+  {c:'PRO9214',    n:'Gerenciamento de Resíduos',            g:'man'},
+  {c:'PRO9215',    n:'Plano Atendimento a Emergências',      g:'man'},
+  {c:'PRO9200',    n:'Inspeção',                             g:'man'},
+  {c:'PRO9256',    n:'Manutenção Preventiva e Corretiva',    g:'man'},
+  {c:'IST1558',    n:'Amarração de Palete',                  g:'op'},
+  {c:'PRO9156',    n:'Armazenagem na Importação',            g:'op'},
+  {c:'PRO9164',    n:'Courier',                              g:'op'},
+  {c:'IST1555',    n:'Despaletização',                       g:'op'},
+  {c:'IST1554',    n:'Estacionamento',                       g:'op'},
+  {c:'IST1553',    n:'Gestão de Docas',                      g:'op'},
+  {c:'IST1502',    n:'Inspeção e Serviços',                  g:'op'},
+  {c:'PRO9157',    n:'Inventário',                           g:'op'},
+  {c:'IST1490',    n:'Linha Saúde',                          g:'op'},
+  {c:'IST1489',    n:'Mov. Cargas por Empilhadeira',         g:'op'},
+  {c:'IST1503',    n:'Mov. Manual de Cargas',                g:'op'},
+  {c:'IST1487',    n:'Ponto Zero',                           g:'op'},
+  {c:'IST1488',    n:'Recusa do Transelevador',              g:'op'},
+  {c:'PRO9162',    n:'Recebimento Importação',               g:'op'},
+];
+
+const MROWS6_FALLBACK=[
+  {n:1, mat:'30155587',nome:'Abel Aparecido Costa De Sousa',         cargo:'ANALISTA DE DADOS E PLANEJ.',  turno:'ADM',    sup:'Glaucio Assis',                setor:'PROJ. E MELHORIAS',sub:'PROJ. E MELHORIAS',st:['T','T','A','N/A','N/A','N/A','N/A','N/A','N/A','N/A','N/A','N/A','N/A','N/A','N/A','N/A','N/A','N/A','N/A','N/A','N/A','N/A','N/A','N/A']},
+  {n:2, mat:'30167460',nome:'Abraao Euler Ferreira Pessoa Da Silva',  cargo:'AUXILIAR DE MOVIMENTAÇÃO I',   turno:'BRAVO',  sup:'Nelson Alves Barela',          setor:'COURIER',          sub:'SPOT',             st:['T','A','T','N/A','A','A','N/A','N/A','A','N/A','A','T','T','A','A','T','T','A','N/A','T','T','T','A','N/A']},
+  {n:3, mat:'30173218',nome:'Adailton Oliveira Barbosa',              cargo:'AUXILIAR DE MOVIMENTAÇÃO I',   turno:'BRAVO',  sup:'Pedro Francisco de Sousa Filho', setor:'RECEBIMENTO',      sub:'IMPORTAÇÃO',       st:['A','A','T','N/A','N/A','N/A','N/A','N/A','A','N/A','A','T','N/A','A','A','B','T','A','N/A','A','T','T','A','T']},
+  {n:4, mat:'30172844',nome:'Adalberto Pessoa Bandeira',              cargo:'OPERADOR DE EMPILHADEIRA I',   turno:'ALFA',   sup:'Fernando Santos Barbosa',       setor:'DI',               sub:'IMPORTAÇÃO',       st:['T','A','T','N/A','N/A','N/A','N/A','N/A','T','T','T','T','N/A','T','B','T','T','A','N/A','T','T','T','B','A']},
+  {n:5, mat:'30154636',nome:'Luciana Botelho Fonseca de Jesus',       cargo:'INSPETOR DE CARGA',            turno:'CHARLIE',sup:'Marcos Pires da Silva',          setor:'IMPORTAÇÃO',       sub:'IMPORTAÇÃO',       st:['T','T','T','A','A','N/A','N/A','N/A','T','N/A','T','T','N/A','T','T','T','A','T','N/A','N/A','T','T','N/A','T']},
+  {n:6, mat:'30154583',nome:'Jose Marcos Samuel Ribeiro dos Santos',  cargo:'AUXILIAR DE MOVIMENTAÇÃO I',   turno:'BRAVO',  sup:'Rosenildo Ferreira Maximo',     setor:'OPERAÇÕES',        sub:'SPOT',             st:['A','T','A','N/A','A','N/A','N/A','N/A','A','N/A','T','A','T','A','T','A','T','A','N/A','T','T','T','A','N/A']},
+  {n:7, mat:'30146185',nome:'Rosenildo Ferreira Maximo',              cargo:'MOTORISTA OPERADOR',           turno:'ADM',    sup:'Guilherme de Oliveira Monteiro', setor:'IMPORTAÇÃO',       sub:'IMPORTAÇÃO',       st:['T','T','T','N/A','N/A','N/A','N/A','N/A','N/A','N/A','N/A','N/A','N/A','N/A','T','N/A','N/A','N/A','N/A','N/A','T','T','N/A','N/A']},
+  {n:8, mat:'30154624',nome:'Fabio Marins',                           cargo:'OPERADOR DE EMPILHADEIRA I',   turno:'CHARLIE',sup:'Abel Aparecido Costa De Sousa',  setor:'OPERAÇÕES',        sub:'IMPORTAÇÃO',       st:['A','T','T','N/A','N/A','N/A','N/A','N/A','A','T','T','T','N/A','T','T','T','T','A','N/A','T','T','T','T','A']},
+  {n:9, mat:'30150386',nome:'Marcos Pires da Silva',                  cargo:'MOTORISTA OPERADOR',           turno:'ALFA',   sup:'Glaucio Assis dos Santos',      setor:'IMPORTAÇÃO',       sub:'IMPORTAÇÃO',       st:['T','A','T','N/A','N/A','N/A','N/A','N/A','T','N/A','N/A','N/A','N/A','N/A','T','N/A','N/A','N/A','N/A','N/A','T','T','N/A','N/A']},
+  {n:10,mat:'30154575',nome:'Dexther Jonatas Martins Pinarelli',      cargo:'AUXILIAR DE MOVIMENTAÇÃO I',   turno:'CHARLIE',sup:'Nelson Alves Barela',           setor:'COURIER',          sub:'SPOT',             st:['A','A','T','N/A','A','A','N/A','N/A','A','N/A','A','T','T','A','A','B','T','A','T','A','T','T','A','T']},
+];
+
+const FCOLS6=[{w:36,l:0},{w:84,l:36},{w:210,l:120},{w:170,l:330},{w:72,l:500}];
+const FHDRS6=['Nº','Matrícula','Nome','Cargo','Turno'];
+const GCOL6={ssma:'#6d28d9',man:'#0369a1',op:'#991b1b',jsl:'#991b1b',simpar:'#0369a1',matriz:'#1e3a5f'};
+function _trains6(){ return (D?.matriz?.treinamentos?.length ? D.matriz.treinamentos : TRAINS6_FALLBACK); }
+function _mrows6(){ return (D?.matriz?.colaboradores?.length ? D.matriz.colaboradores : MROWS6_FALLBACK); }
+function _esc(v){ return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+
+function renderMatrix(rows){
+  const trains=_trains6();
+  const stC={'T':'mat-t','A':'mat-a','B':'mat-b','A.T':'mat-a','B.T':'mat-b','N/A':'mat-na'};
+  let h='<table class="mat-tbl"><thead>';
+
+  h+='<tr>';
+  FCOLS6.forEach((c,i)=>{
+    const br=i===FCOLS6.length-1?2:1;
+    h+=`<th style="position:sticky;top:0;left:${c.l}px;z-index:30;background:#1e3a5f;min-width:${c.w}px;width:${c.w}px;height:28px;border-right:${br}px solid #2d4e7a"></th>`;
+  });
+  const grupos=[];
+  trains.forEach(t=>{
+    const key=t.g||'matriz';
+    const label=t.grupo||key.toUpperCase();
+    const last=grupos[grupos.length-1];
+    if(last&&last.g===key&&last.label===label) last.n++;
+    else grupos.push({label,n:1,g:key});
+  });
+  grupos.forEach(g=>{
+    h+=`<th colspan="${g.n}" style="position:sticky;top:0;z-index:20;background:${GCOL6[g.g]||GCOL6.matriz};color:#fff;font-size:.68rem;font-weight:700;letter-spacing:.08em;text-align:center;padding:6px 4px;border-left:2px solid rgba(255,255,255,.25)">${g.label}</th>`;
+  });
+  h+='</tr><tr>';
+
+  FCOLS6.forEach((c,i)=>{
+    const br=i===FCOLS6.length-1?2:1;
+    const al=i>=2?'left':'center';
+    h+=`<th style="position:sticky;top:28px;left:${c.l}px;z-index:30;background:#1e3a5f;color:#fff;font-size:.67rem;font-weight:600;min-width:${c.w}px;width:${c.w}px;padding:7px 6px;text-align:${al};border-right:${br}px solid #2d4e7a;border-bottom:2px solid rgba(255,255,255,.2);white-space:nowrap">${FHDRS6[i]}</th>`;
+  });
+  trains.forEach(t=>{
+    h+=`<th class="mat-th-v" style="position:sticky;top:28px;z-index:20;border-top:3px solid ${GCOL6[t.g]||GCOL6.matriz}"><span><span style="color:#1e3a5f;font-weight:600">${t.n}</span></span></th>`;
+  });
+  h+='</tr></thead><tbody>';
+
+  let totT=0,totA=0,totB=0,totNA=0;
+  rows.forEach((r,ri)=>{
+    const bg=ri%2===0?'#fff':'#fafbfc';
+    h+=`<tr class="mat-row" onmouseover="this.querySelectorAll('td').forEach(c=>c.style.background='#fffbeb')" onmouseout="this.querySelectorAll('td').forEach(c=>c.style.background='')">`;
+    [r.n,r.mat,r.nome,r.cargo,r.turno||'–'].forEach((v,i)=>{
+      const br=i===FCOLS6.length-1?2:1;
+      const al=i>=2?'left':'center';
+      h+=`<td style="position:sticky;left:${FCOLS6[i].l}px;z-index:10;background:${bg};min-width:${FCOLS6[i].w}px;max-width:${FCOLS6[i].w}px;padding:5px 7px;border-bottom:1px solid #f1f5f9;border-right:${br}px solid #e2e8f0;text-align:${al};font-size:.71rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${v}</td>`;
+    });
+    r.st.forEach((s,si)=>{
+      const treino=trains[si]||{};
+      const status=['A','B','T','A.T','B.T'].includes(s) ? s : 'N/A';
+      if(status==='T')totT++;else if(status==='A'||status==='A.T')totA++;else if(status==='B'||status==='B.T')totB++;else totNA++;
+      const opts=['N/A','A','B','T','A.T','B.T'].map(op=>`<option value="${op}" ${op===status?'selected':''}>${op}</option>`).join('');
+      h+=`<td class="mat-cell ${stC[status]||'mat-na'}"><select class="mat-select" data-mat="${_esc(r.mat)}" data-mission="${_esc(treino.c)}" data-prev="${status}" onchange="updateMatrizCell(this)">${opts}</select></td>`;
+    });
+    h+='</tr>';
+  });
+  h+='</tbody></table>';
+
+  document.getElementById('mat-container').innerHTML=h;
+  document.getElementById('m6-count').textContent=`${rows.length} colaborador${rows.length!==1?'es':''} · ${trains.length} treinamentos`;
+  document.getElementById('m6-tot').textContent=totT;
+  document.getElementById('m6-a').textContent=totA;
+  document.getElementById('m6-b').textContent=totB;
+  document.getElementById('m6-na').textContent=totNA;
+}
+
+async function updateMatrizCell(sel){
+  const novo=sel.value;
+  const anterior=sel.dataset.prev || 'N/A';
+  const td=sel.closest('td');
+  td.classList.add('mat-saving');
+  sel.disabled=true;
+  try{
+    if(!window.location.hostname.match(/localhost|127\.0\.0\.1/)){
+      throw new Error('Abra pelo executar_dashboard.bat para salvar e associar na Skore.');
+    }
+    const resp=await fetch('/matriz/update',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({matricula:sel.dataset.mat, mission_id:sel.dataset.mission, status:novo})
+    });
+    const data=await resp.json().catch(()=>({}));
+    if(!resp.ok||!data.ok) throw new Error(data.msg||'Nao foi possivel atualizar a matriz.');
+    sel.dataset.prev=novo;
+    td.className=`mat-cell ${({'T':'mat-t','A':'mat-a','B':'mat-b','A.T':'mat-a','B.T':'mat-b','N/A':'mat-na'}[novo]||'mat-na')}`;
+    if(novo==='N/A') alert('Matriz atualizada. N/A nao desassocia automaticamente da Skore.');
+  }catch(e){
+    sel.value=anterior;
+    alert(e.message||e);
+  }finally{
+    sel.disabled=false;
+    td.classList.remove('mat-saving');
+  }
+}
+
+function filterMatrix6(){
+  const q=(document.getElementById('m6-search').value||'').toLowerCase();
+  const turno=document.getElementById('m6-turno').value;
+  const setor=document.getElementById('m6-setor').value;
+  const cargo=document.getElementById('m6-cargo').value;
+  renderMatrix(_mrows6().filter(r=>{
+    if(q&&!r.nome.toLowerCase().includes(q)&&!r.mat.includes(q)&&!r.cargo.toLowerCase().includes(q)) return false;
+    if(turno&&r.turno!==turno) return false;
+    if(setor&&r.setor!==setor) return false;
+    if(cargo&&r.cargo!==cargo) return false;
+    return true;
+  }));
+}
+
+// ── Helper: gera CSV com BOM e dispara download ─────────────────────────────
+function _downloadCSV(filename, linhas){
+  const BOM = '﻿';
+  const csv = BOM + linhas.map(cols =>
+    cols.map(c => {
+      const s = String(c ?? '').replace(/"/g, '""');
+      return /[,"\n\r]/.test(s) ? `"${s}"` : s;
+    }).join(',')
+  ).join('\r\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+// ── Exporta Matriz de Treinamentos (p6) ────────────────────────────────────
+function exportarMatriz(){
+  const colaboradores = D?.matriz?.colaboradores || [];
+  const treinamentos  = D?.matriz?.treinamentos  || [];
+  if(!colaboradores.length){ alert('Sem dados de matriz para exportar.'); return; }
+
+  const cabecalho = ['#','Matrícula','Nome','Cargo','Turno','Gestor','Setor',
+    ...treinamentos.map(t => t.n || t.c)];
+  const linhas = [cabecalho];
+
+  colaboradores.forEach(c => {
+    linhas.push([
+      c.n, c.mat, c.nome, c.cargo, c.turno, c.sup, c.setor,
+      ...(c.st || [])
+    ]);
+  });
+
+  _downloadCSV(`matriz_treinamentos_${new Date().toISOString().slice(0,10)}.csv`, linhas);
+}
+
+// ── Exporta Pendências (p2 / p3) ───────────────────────────────────────────
+function exportarPendencias(){
+  const rows = typeof PEND_ROWS !== 'undefined' ? PEND_ROWS : [];
+  if(!rows.length){ alert('Sem pendências para exportar.'); return; }
+
+  const cabecalho = ['Matrícula','Nome','Gestor','Setor','Turno','Missão','Status'];
+  const linhas = [cabecalho, ...rows.map(r =>
+    [r.mat, r.nome, r.gestor, r.depto, r.turno, r.missao, r.status]
+  )];
+  _downloadCSV(`pendencias_${new Date().toISOString().slice(0,10)}.csv`, linhas);
+}
+
+// ── Exporta Colaboradores Atribuíveis (p5) ─────────────────────────────────
+function exportarAtribuiveis(){
+  const colaboradores = D?.matriz?.colaboradores || [];
+  const treinamentos  = D?.matriz?.treinamentos  || [];
+  // Atribuível = status 'A' em qualquer missão
+  const rows = [];
+  colaboradores.forEach(c => {
+    (c.st || []).forEach((st, i) => {
+      if(st === 'A'){
+        const t = treinamentos[i] || {};
+        rows.push([c.mat, c.nome, c.cargo, c.turno, c.sup, c.setor, t.n || t.c || '']);
+      }
+    });
+  });
+  if(!rows.length){ alert('Sem dados atribuíveis para exportar.'); return; }
+  const cabecalho = ['Matrícula','Nome','Cargo','Turno','Gestor','Setor','Treinamento'];
+  _downloadCSV(`atribuiveis_${new Date().toISOString().slice(0,10)}.csv`, [cabecalho, ...rows]);
+}
+
+function initP6(){
+  const rows=_mrows6();
+  _setSelectOptions('m6-turno', [...new Set(rows.map(r=>_norm(r.turno)).filter(Boolean))].sort(), 'Turno');
+  _setSelectOptions('m6-setor', [...new Set(rows.map(r=>_norm(r.setor)).filter(Boolean))].sort(), 'Setor');
+  _setSelectOptions('m6-cargo', [...new Set(rows.map(r=>_norm(r.cargo)).filter(Boolean))].sort(), 'Cargo');
+  renderMatrix(rows);
+  ['m6-search','m6-turno','m6-setor','m6-cargo'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el){el.addEventListener('input',filterMatrix6);el.addEventListener('change',filterMatrix6);}
+  });
+}
+
+// ── ATUALIZAÇÃO VIA SERVIDOR ──────────────────────────────────────────────────
+async function atualizarDados(){
+  const modal   = document.getElementById('modal-upd');
+  const etapaEl = document.getElementById('modal-etapa');
+  const statusEl= document.getElementById('modal-status');
+  const timerEl = document.getElementById('modal-timer');
+  const barraEl = document.getElementById('modal-barra');
+  const spinner = document.getElementById('modal-spinner');
+  const erroBox = document.getElementById('modal-erro-box');
+  const btnFech = document.getElementById('modal-fechar');
+  const btnRel  = document.getElementById('modal-reload');
+  const rodape  = document.getElementById('modal-rodape');
+  const ico     = document.getElementById('ico-ref');
+
+  // Reseta modal
+  modal.style.display  = 'flex';
+  etapaEl.textContent  = 'Conectando ao servidor…';
+  etapaEl.style.color  = '#1e3a5f';
+  statusEl.textContent = '';
+  statusEl.style.color = '#64748b';
+  if(erroBox)  erroBox.style.display = 'none';
+  if(rodape)   rodape.style.display  = 'none';
+  if(btnFech)  btnFech.style.display = 'none';
+  if(btnRel)   btnRel.style.display  = 'none';
+  if(barraEl)  barraEl.style.width   = '0%';
+  if(timerEl)  timerEl.textContent   = '';
+  if(spinner)  spinner.style.animation = 'spin .9s linear infinite';
+  if(ico)      ico.style.animation     = 'spin 1s linear infinite';
+
+  // Passos: circle + texto
+  const _CSS_BASE  = 'width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;transition:all .3s;';
+  const _passos = ['login','looker','dados','dash'];
+
+  function _el(id){ return document.getElementById(id); }
+
+  function _resetPassos(){
+    _passos.forEach(p=>{
+      const c=_el('pc-'+p), t=_el('pt-'+p);
+      if(c){ c.style.cssText=_CSS_BASE+'background:#e2e8f0;color:#94a3b8;'; c.textContent=_passos.indexOf(p)+1; }
+      if(t)  t.style.color='#94a3b8';
+    });
+  }
+  function _ativarPasso(p){
+    const c=_el('pc-'+p), t=_el('pt-'+p);
+    if(c) c.style.cssText=_CSS_BASE+'background:#2563eb;color:#fff;';
+    if(t) t.style.color='#2563eb';
+  }
+  function _concluirPasso(p){
+    const c=_el('pc-'+p), t=_el('pt-'+p);
+    if(c){ c.style.cssText=_CSS_BASE+'background:#16a34a;color:#fff;'; c.textContent='✓'; }
+    if(t) t.style.color='#16a34a';
+  }
+  _resetPassos();
+  _ativarPasso('login');
+
+  // Timer
+  const _t0 = Date.now();
+  const _tick = setInterval(()=>{
+    const s = Math.floor((Date.now()-_t0)/1000);
+    timerEl.textContent = `${Math.floor(s/60)}m ${String(s%60).padStart(2,'0')}s`;
+  }, 1000);
+
+  // Interpreta linha do log e avança passos
+  function _processarLinha(txt){
+    const t = txt.toLowerCase();
+    if(t.includes('login') || t.includes('fazendo login')){
+      _ativarPasso('login');
+      etapaEl.textContent = 'Fazendo login na Skore…';
+      barraEl.style.width = '15%';
+    } else if(t.includes('looker') || t.includes('sess')){
+      _concluirPasso('login'); _ativarPasso('looker');
+      etapaEl.textContent = 'Carregando sessão Looker…';
+      barraEl.style.width = '35%';
+    } else if(t.includes('lote') || t.includes('baixando') || t.includes('download')){
+      _concluirPasso('looker'); _ativarPasso('dados');
+      const m = txt.match(/lote\s*(\d+)\s*\/\s*(\d+)/i);
+      etapaEl.textContent = m ? `Baixando dados — lote ${m[1]} de ${m[2]}…` : 'Baixando dados da Skore…';
+      const pct = m ? 35 + Math.round((+m[1]/ +m[2])*40) : 55;
+      barraEl.style.width = pct+'%';
+    } else if(t.includes('processando') || t.includes('salvando') || t.includes('gerar')){
+      _concluirPasso('dados'); _ativarPasso('dash');
+      etapaEl.textContent = 'Processando e salvando…';
+      barraEl.style.width = '82%';
+    } else if(t.includes('conclu') || t.includes('✅')){
+      etapaEl.textContent = 'Finalizando dashboard…';
+      barraEl.style.width = '95%';
+    }
+    // Erros
+    if(/erro|error|traceback/i.test(txt)){
+      statusEl.textContent = txt.substring(0,80);
+    }
+  }
+
+  function finalizar(ok){
+    clearInterval(_tick);
+    spinner.style.animation = 'none';
+    if(ico) ico.style.animation = '';
+    rodape.style.display = 'flex';
+    if(ok){
+      _concluirPasso('dash');
+      barraEl.style.width = '100%';
+      barraEl.style.background = 'linear-gradient(90deg,#16a34a,#4ade80)';
+      etapaEl.textContent = 'Concluído!';
+      etapaEl.style.color = '#16a34a';
+      statusEl.textContent = 'Dados atualizados com sucesso';
+      statusEl.style.color = '#16a34a';
+      btnRel.style.display = 'inline-block';
+      let seg = 3;
+      btnRel.textContent = `↻ Recarregando em ${seg}s…`;
+      const _ctr = setInterval(()=>{
+        seg--;
+        if(seg<=0){ clearInterval(_ctr); window.location.href='http://localhost:8050'; }
+        else btnRel.textContent = `↻ Recarregando em ${seg}s…`;
+      }, 1000);
+      btnRel.onclick = ()=>{ clearInterval(_ctr); window.location.href='http://localhost:8050'; };
+    } else {
+      etapaEl.textContent = 'Ocorreu um erro';
+      etapaEl.style.color = '#dc2626';
+      barraEl.style.background = '#ef4444';
+      btnFech.style.display = 'inline-block';
+    }
+  }
+
+  function semServidor(){
+    clearInterval(_tick);
+    spinner.style.animation = 'none';
+    if(ico) ico.style.animation = '';
+    etapaEl.textContent  = 'Servidor offline';
+    etapaEl.style.color  = '#dc2626';
+    statusEl.textContent = 'Abra o abrir.bat e tente novamente';
+    statusEl.style.color = '#f87171';
+    erroBox.style.display= 'block';
+    erroBox.textContent  = 'Servidor não encontrado em localhost:8050. Execute o abrir.bat para iniciá-lo.';
+    rodape.style.display = 'flex';
+    btnFech.style.display= 'inline-block';
+  }
+
+  async function _ping(url){
+    try{ const r=await fetch(url,{cache:'no-store',signal:AbortSignal.timeout(2000)}); return r.ok; }
+    catch(_){ return false; }
+  }
+
+  // ── Verifica servidor ────────────────────────────────────────────────────
+  if(!await _ping('http://localhost:8050/status')){ semServidor(); return; }
+
+  try{
+    const r2 = await fetch('http://localhost:8050/atualizar',{method:'POST'});
+    const j2 = await r2.json();
+    if(!j2.ok){ erroBox.style.display='block'; erroBox.textContent=j2.msg; finalizar(false); return; }
+
+    const sse = new EventSource('http://localhost:8050/log');
+    sse.onmessage = e => {
+      if(e.data==='__DONE__'){ sse.close(); finalizar(true); }
+      else if(e.data.trim()) _processarLinha(e.data);
+    };
+    sse.onerror = ()=>{ sse.close(); finalizar(false); };
+  } catch(e){
+    erroBox.style.display='block';
+    erroBox.textContent = e.message;
+    finalizar(false);
+  }
+}
+
+function fecharModal(){
+  document.getElementById('modal-upd').style.display = 'none';
+}
+
+// Animação de giro
+const _sty = document.createElement('style');
+_sty.textContent = '@keyframes spin{to{transform:rotate(360deg)}}';
+document.head.appendChild(_sty);
+
+// Indicador de status do servidor (badge + ícone girando)
+(function _ping(){
+  const ico   = document.getElementById('ico-ref');
+  const badge = document.getElementById('srv-badge');
+  const btn   = document.getElementById('btn-atualizar');
+  if(!ico){ setTimeout(_ping, 3000); return; }
+
+  const url = window.location.hostname.match(/localhost|127\.0\.0\.1/)
+    ? '/status' : 'http://localhost:8050/status';
+
+  fetch(url, {cache:'no-store', signal:AbortSignal.timeout(1500)})
+    .then(r => r.ok ? r.json() : null)
+    .then(j => {
+      if(!badge){ setTimeout(_ping, 3000); return; }
+      badge.style.display = 'inline-block';
+      if(j && j.rodando){
+        ico.style.animation    = 'spin 1s linear infinite';
+        badge.textContent      = '⟳ processando';
+        badge.style.background = '#fef9c3';
+        badge.style.color      = '#92400e';
+      } else {
+        ico.style.animation    = '';
+        badge.textContent      = '● servidor ativo';
+        badge.style.background = '#dcfce7';
+        badge.style.color      = '#166534';
+      }
+      setTimeout(_ping, 3000);
+    })
+    .catch(() => {
+      if(badge){
+        badge.style.display    = 'inline-block';
+        ico.style.animation    = '';
+        badge.textContent      = '○ offline — abrir.bat';
+        badge.style.background = '#fee2e2';
+        badge.style.color      = '#991b1b';
+        if(btn) btn.title      = 'Servidor offline — execute abrir.bat primeiro';
+      }
+      setTimeout(_ping, 5000);
+    });
+})();
+</script>
+</body>
+
+<!--PYTHON_SERVER
+import json, mimetypes, os, subprocess, sys, threading, time, webbrowser
+from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
+
+BASE  = os.path.dirname(os.path.abspath(__file__))
+PORTA = 8050
+ESTADO = {"rodando": False, "log": [], "erro": None}
+
+
+class Handler(SimpleHTTPRequestHandler):
+
+    def _cors(self):
+        self.send_header("Access-Control-Allow-Origin",  "*")
+        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type")
+
+    def _no_cache(self):
+        self.send_header("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0")
+        self.send_header("Pragma",  "no-cache")
+        self.send_header("Expires", "0")
+
+    def _json(self, payload, status=200):
+        body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
+        self.send_response(status)
+        self.send_header("Content-Type",   "application/json; charset=utf-8")
+        self.send_header("Content-Length", str(len(body)))
+        self._no_cache()
+        self._cors()
+        self.end_headers()
+        self.wfile.write(body)
+
+    def _serve_file(self, path, ct=None):
+        with open(path, "rb") as f:
+            body = f.read()
+        self.send_response(200)
+        self.send_header("Content-Type",   ct or mimetypes.guess_type(path)[0] or "application/octet-stream")
+        self.send_header("Content-Length", str(len(body)))
+        self._no_cache()
+        self._cors()
+        self.end_headers()
+        self.wfile.write(body)
+
+    def do_OPTIONS(self):
+        self.send_response(200)
+        self._cors()
+        self.end_headers()
+
+    def do_GET(self):
+        rota = self.path.split("?")[0]
+        if rota in ("/", "/dashboard_simpar.html"):
+            p = os.path.join(BASE, "dashboard_simpar.html")
+            with open(p, encoding="utf-8") as f:
+                html = f.read().replace('src="dados.js"', f'src="dados.js?v={int(time.time())}"')
+            body = html.encode("utf-8")
+            self.send_response(200)
+            self.send_header("Content-Type",   "text/html; charset=utf-8")
+            self.send_header("Content-Length", str(len(body)))
+            self._no_cache()
+            self._cors()
+            self.end_headers()
+            self.wfile.write(body)
+            return
+        if rota.startswith("/dados.js"):
+            self._serve_file(os.path.join(BASE, "dados.js"), "application/javascript; charset=utf-8")
+            return
+        if rota == "/status":
+            self._json(ESTADO)
+            return
+        if rota.startswith("/log"):
+            self._stream_log()
+            return
+        super().do_GET()
+
+    def _stream_log(self):
+        self.send_response(200)
+        self.send_header("Content-Type",      "text/event-stream; charset=utf-8")
+        self.send_header("Cache-Control",     "no-cache")
+        self.send_header("X-Accel-Buffering", "no")
+        self._cors()
+        self.end_headers()
+        ultimo = 0
+        try:
+            while True:
+                linhas = ESTADO["log"]
+                if len(linhas) > ultimo:
+                    for linha in linhas[ultimo:]:
+                        self.wfile.write(f"data: {linha}\n\n".encode("utf-8"))
+                        self.wfile.flush()
+                    ultimo = len(linhas)
+                if not ESTADO["rodando"] and ultimo >= len(ESTADO["log"]):
+                    self.wfile.write(b"data: __DONE__\n\n")
+                    self.wfile.flush()
+                    break
+                time.sleep(0.3)
+        except Exception:
+            pass
+
+    def do_POST(self):
+        rota = self.path.split("?")[0]
+        if rota.startswith("/atualizar"):
+            self._iniciar_atualizacao()
+            return
+        if rota.startswith("/matriz/update"):
+            try:
+                size  = int(self.headers.get("Content-Length", "0"))
+                dados = json.loads(self.rfile.read(size).decode("utf-8") or "{}")
+                sys.path.insert(0, BASE)
+                from matriz_api import atualizar_status_matriz
+                resultado = atualizar_status_matriz(
+                    dados.get("matricula"), dados.get("mission_id"), dados.get("status")
+                )
+                subprocess.run(
+                    [sys.executable, os.path.join(BASE, "gerar_dados_dash.py")],
+                    cwd=BASE, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                )
+                self._json({"ok": True, "resultado": resultado})
+            except Exception as e:
+                self._json({"ok": False, "msg": str(e)}, 400)
+            return
+        self._json({"ok": False, "msg": "Rota nao encontrada."}, 404)
+
+    def _iniciar_atualizacao(self):
+        if ESTADO["rodando"]:
+            self._json({"ok": False, "msg": "Atualizacao ja em andamento."}, 409)
+            return
+        ESTADO.update({"rodando": True, "log": [], "erro": None})
+
+        def executar(script):
+            ESTADO["log"].append(f"> {script}")
+            proc = subprocess.Popen(
+                [sys.executable, "-u", os.path.join(BASE, script)],
+                cwd=BASE,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+            )
+            for linha in proc.stdout:
+                ESTADO["log"].append(linha.rstrip())
+            proc.wait()
+            return proc.returncode
+
+        def rodar():
+            try:
+                for script in ("skore_not_started_20.py", "gerar_dados_dash.py"):
+                    if executar(script) != 0:
+                        ESTADO["erro"] = f"Erro ao executar {script}."
+                        return
+                ESTADO["log"].append("✅ Concluído!")
+            except Exception as e:
+                ESTADO["erro"] = str(e)
+            finally:
+                ESTADO["rodando"] = False
+
+        threading.Thread(target=rodar, daemon=True).start()
+        self._json({"ok": True, "msg": "Atualizacao iniciada."})
+
+    def log_message(self, *args):
+        pass
+
+
+os.chdir(BASE)
+print(f"  Dashboard: http://localhost:{PORTA}")
+threading.Thread(
+    target=lambda: (time.sleep(1.5), webbrowser.open(f"http://localhost:{PORTA}")),
+    daemon=True,
+).start()
+ThreadingHTTPServer(("0.0.0.0", PORTA), Handler).serve_forever()
+PYTHON_SERVER-->
+</html>
