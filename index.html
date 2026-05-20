@@ -2773,13 +2773,15 @@ document.head.appendChild(_sty);
 
 // Indicador de status do servidor (badge + ícone girando)
 (function _ping(){
+  // Fora do localhost (ex: GitHub Pages) não monitora servidor
+  if(!window.location.hostname.match(/localhost|127\.0\.0\.1/)) return;
+
   const ico   = document.getElementById('ico-ref');
   const badge = document.getElementById('srv-badge');
   const btn   = document.getElementById('btn-atualizar');
   if(!ico){ setTimeout(_ping, 3000); return; }
 
-  const url = window.location.hostname.match(/localhost|127\.0\.0\.1/)
-    ? '/status' : 'http://localhost:8050/status';
+  const url = '/status';
 
   fetch(url, {cache:'no-store', signal:AbortSignal.timeout(1500)})
     .then(r => r.ok ? r.json() : null)
