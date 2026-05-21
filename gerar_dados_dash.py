@@ -24,14 +24,15 @@ ARQUIVO_BIBLIO  = os.path.join(BASE_DIR, "input", "biblioteca_colaboradores.xlsx
 
 
 def _carregar_biblio_gestor_turno() -> dict:
-    """Retorna {matricula: {"gestor": ..., "turno": ...}} da biblioteca_colaboradores.xlsx."""
+    """Retorna {matricula: {"gestor": ..., "turno": ..., "setor": ...}} da biblioteca_colaboradores.xlsx."""
     if not os.path.exists(ARQUIVO_BIBLIO):
         return {}
     df = pd.read_excel(ARQUIVO_BIBLIO, dtype=str).fillna("")
     cols = {str(c).strip().lower(): c for c in df.columns}
-    col_mat  = cols.get("matricula")
-    col_gest = cols.get("gestor")
-    col_turn = cols.get("turno")
+    col_mat   = cols.get("matricula")
+    col_gest  = cols.get("gestor")
+    col_turn  = cols.get("turno")
+    col_setor = cols.get("setor")
     if not col_mat:
         return {}
     biblio = {}
@@ -40,8 +41,9 @@ def _carregar_biblio_gestor_turno() -> dict:
         if not mat:
             continue
         biblio[mat] = {
-            "gestor": str(row.get(col_gest, "") if col_gest else "").strip(),
-            "turno":  str(row.get(col_turn, "") if col_turn else "").strip(),
+            "gestor": str(row.get(col_gest,  "") if col_gest  else "").strip(),
+            "turno":  str(row.get(col_turn,  "") if col_turn  else "").strip(),
+            "setor":  str(row.get(col_setor, "") if col_setor else "").strip(),
         }
     return biblio
 
@@ -273,6 +275,9 @@ def _dados_matriz_dashboard(biblio_gt: dict | None = None) -> dict:
         turno_matriz = _limpo(first.get(col_turno, "")) if col_turno else ""
         turno_biblio = biblio_gt.get(mat, {}).get("turno", "")
         turno_final  = turno_biblio if turno_biblio else turno_matriz
+        setor_matriz = _limpo(first.get(col_setor, "")) if col_setor else ""
+        setor_biblio = biblio_gt.get(mat, {}).get("setor", "")
+        setor_final  = setor_biblio if setor_biblio else setor_matriz
         colaboradores.append({
             "n": i,
             "mat": mat,
@@ -280,7 +285,7 @@ def _dados_matriz_dashboard(biblio_gt: dict | None = None) -> dict:
             "cargo": _limpo(first.get(col_cargo, "")) if col_cargo else "",
             "turno": turno_final,
             "sup": _limpo(first.get(col_gestor, "")) if col_gestor else "",
-            "setor": _limpo(first.get(col_setor, "")) if col_setor else "",
+            "setor": setor_final,
             "sub": "",
             "st": [status_por_missao.get(mid, "N/A") for mid in ordem_missoes],
         })
@@ -438,20 +443,22 @@ def calcular_dados(df: pd.DataFrame) -> dict:
         col_gest_df = next((c for c in df_vg.columns if "lider" in c.lower() or "gestor" in c.lower()), None)
         col_turn_df = next((c for c in df_vg.columns if c.strip().lower() == "turno"), None)
 
+        col_setor_df = next((c for c in df_vg.columns if c.strip().lower() == "setor"), None)
+
         def _aplicar_biblio(row):
             mat  = str(row.get(col_user, "")).strip()
             info = biblio_gt.get(mat, {})
             if col_gest_df:
-                # Gestor SEMPRE da biblioteca — zera quem não está lá
-                # (evita que valores do Skore como "CREDENCIAMENTO" apareçam)
                 row[col_gest_df] = info.get("gestor", "")
             if col_turn_df and info.get("turno"):
                 row[col_turn_df] = info["turno"]
                 row["_turno"]    = info["turno"]
+            if col_setor_df and info.get("setor"):
+                row[col_setor_df] = info["setor"]
             return row
 
         df_vg = df_vg.apply(_aplicar_biblio, axis=1)
-        print(f"Biblioteca aplicada: {len(biblio_gt)} registros de gestor/turno.")
+        print(f"Biblioteca aplicada: {len(biblio_gt)} registros de gestor/turno/setor.")
 
     # ── KPIs por USUÁRIO (não por linha de matrícula) ─────────────────────────
     col_min = next((c for c in df.columns if "carga" in c.lower()), None)
