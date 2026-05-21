@@ -809,7 +809,15 @@ window.ChartDataLabels={};
 </div>
 
 <!-- ══════════════════ PAGE 7: OBRIGATÓRIOS SIMPAR ══════════════════ -->
-<div class="lay" id="p7" style="display:none">
+<div class="lay" id="p7" style="display:none;position:relative">
+  <!-- Marca d'água Em Implementação -->
+  <div style="pointer-events:none;position:fixed;inset:0;z-index:8000;display:flex;align-items:center;justify-content:center;overflow:hidden">
+    <div style="transform:rotate(-35deg);text-align:center;user-select:none">
+      <div style="font-size:5.5rem;font-weight:900;color:rgba(220,38,38,.07);letter-spacing:.05em;white-space:nowrap;line-height:1">EM IMPLEMENTAÇÃO</div>
+      <div style="font-size:2rem;font-weight:700;color:rgba(220,38,38,.05);letter-spacing:.2em;white-space:nowrap">● EM IMPLEMENTAÇÃO ●</div>
+      <div style="font-size:5.5rem;font-weight:900;color:rgba(220,38,38,.07);letter-spacing:.05em;white-space:nowrap;line-height:1">EM IMPLEMENTAÇÃO</div>
+    </div>
+  </div>
   <aside class="sb" style="padding:14px 10px">
     <div class="nav-logo-box">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
