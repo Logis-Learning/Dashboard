@@ -2535,24 +2535,76 @@ function _downloadCSV(filename, linhas){
   URL.revokeObjectURL(url);
 }
 
-// ── Exporta Matriz de Treinamentos (p6) ────────────────────────────────────
+// ── Exporta Matriz de Treinamentos (p6) — Excel formatado ──────────────────
 function exportarMatriz(){
   const colaboradores = D?.matriz?.colaboradores || [];
   const treinamentos  = D?.matriz?.treinamentos  || [];
   if(!colaboradores.length){ alert('Sem dados de matriz para exportar.'); return; }
 
-  const cabecalho = ['#','Matrícula','Nome','Cargo','Turno','Gestor','Setor',
-    ...treinamentos.map(t => t.n || t.c)];
-  const linhas = [cabecalho];
+  // Cores por status (igual à página)
+  function _corStatus(st){
+    const s = String(st||'').trim().toUpperCase();
+    if(['T','A.T','B.T','COMPLETED','COMPLETED_AFTER_DUE_DATE'].includes(s))
+      return {bg:'#dcfce7',fg:'#166534',label: s==='COMPLETED'||s==='COMPLETED_AFTER_DUE_DATE'?'✓':s};
+    if(['A','IN_PROGRESS'].includes(s))
+      return {bg:'#fef9c3',fg:'#854d0e',label: s==='IN_PROGRESS'?'Em And.':s};
+    if(['NOT_STARTED','NAO_INICIADO'].includes(s))
+      return {bg:'#fee2e2',fg:'#991b1b',label:'Não Inic.'};
+    if(s===''||s==='N/A'||s==='NAO MATRICULADO')
+      return {bg:'#f1f5f9',fg:'#94a3b8',label:'—'};
+    return {bg:'#f8fafc',fg:'#334155',label:s};
+  }
 
-  colaboradores.forEach(c => {
-    linhas.push([
-      c.n, c.mat, c.nome, c.cargo, c.turno, c.sup, c.setor,
-      ...(c.st || [])
-    ]);
+  // Monta tabela HTML (abre direto no Excel com formatação)
+  const thStyle = 'background:#1e3a5f;color:#fff;font-weight:700;font-size:11px;padding:6px 8px;border:1px solid #163056;white-space:nowrap;text-align:center';
+  const tdInfo  = 'font-size:11px;padding:5px 8px;border:1px solid #e2e8f0;white-space:nowrap;vertical-align:middle';
+
+  let html = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel">
+<head><meta charset="UTF-8">
+<style>td{font-family:Calibri,Arial,sans-serif}</style>
+</head><body>
+<table border="1" cellspacing="0" cellpadding="0">
+<thead><tr>
+  <th style="${thStyle}">#</th>
+  <th style="${thStyle}">Matrícula</th>
+  <th style="${thStyle}">Nome</th>
+  <th style="${thStyle}">Cargo</th>
+  <th style="${thStyle}">Turno</th>
+  <th style="${thStyle}">Gestor</th>
+  <th style="${thStyle}">Setor</th>
+  ${treinamentos.map(t=>`<th style="${thStyle}">${t.n||t.c}</th>`).join('')}
+</tr></thead>
+<tbody>`;
+
+  const zebraA = '#ffffff', zebraB = '#f8fafc';
+  colaboradores.forEach((c, i) => {
+    const bg = i%2===0 ? zebraA : zebraB;
+    html += `<tr>
+      <td style="${tdInfo};background:${bg};color:#94a3b8;text-align:center">${c.n}</td>
+      <td style="${tdInfo};background:${bg};font-weight:600">${c.mat||''}</td>
+      <td style="${tdInfo};background:${bg}">${c.nome||''}</td>
+      <td style="${tdInfo};background:${bg}">${c.cargo||''}</td>
+      <td style="${tdInfo};background:${bg};text-align:center">${c.turno||''}</td>
+      <td style="${tdInfo};background:${bg}">${c.sup||''}</td>
+      <td style="${tdInfo};background:${bg}">${c.setor||''}</td>
+      ${(c.st||[]).map(st=>{
+        const {bg:sb,fg:sf,label:sl}=_corStatus(st);
+        return `<td style="${tdInfo};background:${sb};color:${sf};font-weight:700;text-align:center">${sl}</td>`;
+      }).join('')}
+    </tr>`;
   });
 
-  _downloadCSV(`matriz_treinamentos_${new Date().toISOString().slice(0,10)}.csv`, linhas);
+  html += '</tbody></table></body></html>';
+
+  const blob = new Blob([html], {type:'application/vnd.ms-excel;charset=utf-8'});
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = `matriz_treinamentos_${new Date().toISOString().slice(0,10)}.xls`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
 
 // ── Exporta Pendências (p2 / p3) ───────────────────────────────────────────
