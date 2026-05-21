@@ -24,7 +24,7 @@ ARQUIVO_BIBLIO  = os.path.join(BASE_DIR, "input", "biblioteca_colaboradores.xlsx
 
 
 def _carregar_biblio_gestor_turno() -> dict:
-    """Retorna {matricula: {"gestor": ..., "turno": ..., "setor": ...}} da biblioteca_colaboradores.xlsx."""
+    """Retorna {matricula: {"gestor": ..., "turno": ..., "setor": ..., "cargo": ...}} da biblioteca_colaboradores.xlsx."""
     if not os.path.exists(ARQUIVO_BIBLIO):
         return {}
     df = pd.read_excel(ARQUIVO_BIBLIO, dtype=str).fillna("")
@@ -33,6 +33,7 @@ def _carregar_biblio_gestor_turno() -> dict:
     col_gest  = cols.get("gestor")
     col_turn  = cols.get("turno")
     col_setor = cols.get("setor")
+    col_carg  = cols.get("cargo")
     if not col_mat:
         return {}
     biblio = {}
@@ -44,6 +45,7 @@ def _carregar_biblio_gestor_turno() -> dict:
             "gestor": str(row.get(col_gest,  "") if col_gest  else "").strip(),
             "turno":  str(row.get(col_turn,  "") if col_turn  else "").strip(),
             "setor":  str(row.get(col_setor, "") if col_setor else "").strip(),
+            "cargo":  str(row.get(col_carg,  "") if col_carg  else "").strip(),
         }
     return biblio
 
@@ -278,11 +280,14 @@ def _dados_matriz_dashboard(biblio_gt: dict | None = None) -> dict:
         setor_matriz = _limpo(first.get(col_setor, "")) if col_setor else ""
         setor_biblio = biblio_gt.get(mat, {}).get("setor", "")
         setor_final  = setor_biblio if setor_biblio else setor_matriz
+        cargo_matriz = _limpo(first.get(col_cargo, "")) if col_cargo else ""
+        cargo_biblio = biblio_gt.get(mat, {}).get("cargo", "")
+        cargo_final  = cargo_biblio if (not cargo_matriz or cargo_matriz.lower() == "nan") else cargo_matriz
         colaboradores.append({
             "n": i,
             "mat": mat,
             "nome": _limpo(first.get(col_nome, "")),
-            "cargo": _limpo(first.get(col_cargo, "")) if col_cargo else "",
+            "cargo": cargo_final,
             "turno": turno_final,
             "sup": _limpo(first.get(col_gestor, "")) if col_gestor else "",
             "setor": setor_final,
@@ -444,6 +449,7 @@ def calcular_dados(df: pd.DataFrame) -> dict:
         col_turn_df = next((c for c in df_vg.columns if c.strip().lower() == "turno"), None)
 
         col_setor_df = next((c for c in df_vg.columns if c.strip().lower() == "setor"), None)
+        col_carg_df  = next((c for c in df_vg.columns if c.strip().lower() == "cargo"), None)
 
         def _aplicar_biblio(row):
             mat  = str(row.get(col_user, "")).strip()
@@ -455,10 +461,15 @@ def calcular_dados(df: pd.DataFrame) -> dict:
                 row["_turno"]    = info["turno"]
             if col_setor_df and info.get("setor"):
                 row[col_setor_df] = info["setor"]
+            # Cargo: preenche se vazio ou nan
+            if col_carg_df and info.get("cargo"):
+                val_atual = str(row.get(col_carg_df, "")).strip().lower()
+                if val_atual in ("", "nan"):
+                    row[col_carg_df] = info["cargo"]
             return row
 
         df_vg = df_vg.apply(_aplicar_biblio, axis=1)
-        print(f"Biblioteca aplicada: {len(biblio_gt)} registros de gestor/turno/setor.")
+        print(f"Biblioteca aplicada: {len(biblio_gt)} registros de gestor/turno/setor/cargo.")
 
     # ── KPIs por USUÁRIO (não por linha de matrícula) ─────────────────────────
     col_min = next((c for c in df.columns if "carga" in c.lower()), None)
@@ -604,19 +615,33 @@ def calcular_dados(df: pd.DataFrame) -> dict:
 
     # ── Colaboradores pendentes (p5 + clique no ranking p4/p7) ──────────────
     df_pend = df_vg[df_vg["_pend"]]  # sem limite: necessário para filtro por missão
+    col_prog = next((c for c in df.columns if "progresso" in c.lower()), None)
+
+    def _s(val):
+        """Converte para string tratando NaN/None → ''."""
+        if val is None:
+            return ""
+        try:
+            if pd.isna(val):
+                return ""
+        except (TypeError, ValueError):
+            pass
+        s = str(val).strip()
+        return "" if s.lower() == "nan" else s
+
     colaboradores_pend = []
     for _, row in df_pend.iterrows():
         colaboradores_pend.append({
-            "nome":   str(row.get(col_nome, "")) if col_nome else "",
-            "mat":    str(row.get(col_user, "")) if col_user else "",
-            "cargo":  str(row.get(col_carg, "")) if col_carg else "",
-            "depto":  str(row.get(col_dept, "")) if col_dept else "",
-            "filial": str(row.get(col_fil,  "")) if col_fil  else "",
-            "turno":  str(row.get("_turno", "")),
-            "gestor": str(row.get(col_gest, "")) if col_gest else "",
-            "missao": str(row.get(col_miss, "")) if col_miss else "",
-            "status": str(row.get("_status", "")),
-            "prog":   str(row.get(col_prog if (col_prog := next((c for c in df.columns if "progresso" in c.lower()), None)) else "_prog", "")),
+            "nome":   _s(row.get(col_nome, "")) if col_nome else "",
+            "mat":    _s(row.get(col_user, "")) if col_user else "",
+            "cargo":  _s(row.get(col_carg, "")) if col_carg else "",
+            "depto":  _s(row.get(col_dept, "")) if col_dept else "",
+            "filial": _s(row.get(col_fil,  "")) if col_fil  else "",
+            "turno":  _s(row.get("_turno", "")),
+            "gestor": _s(row.get(col_gest, "")) if col_gest else "",
+            "missao": _s(row.get(col_miss, "")) if col_miss else "",
+            "status": _s(row.get("_status", "")),
+            "prog":   _s(row.get(col_prog, "")) if col_prog else "",
         })
 
     # Donut por departamento (pendentes)
