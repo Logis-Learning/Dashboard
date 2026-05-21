@@ -2873,6 +2873,51 @@ document.head.appendChild(_sty);
       setTimeout(_ping, 5000);
     });
 })();
+
+// Auto-refresh silencioso — verifica dados.js a cada 10 min
+(function _autoRefresh(){
+  const _tsAtual = (typeof DADOS !== 'undefined' && DADOS.updated_at) ? DADOS.updated_at : null;
+  if(!_tsAtual) return; // sem dados carregados, nada a fazer
+
+  const INTERVALO = 10 * 60 * 1000; // 10 minutos
+
+  function _criarToast(){
+    const t = document.createElement('div');
+    t.id = 'toast-refresh';
+    t.style.cssText = [
+      'position:fixed','bottom:24px','right:24px','z-index:9999',
+      'background:#1e3a5f','color:#fff','padding:12px 20px',
+      'border-radius:10px','font-size:13px','font-weight:600',
+      'box-shadow:0 4px 16px rgba(0,0,0,.25)',
+      'display:flex','align-items:center','gap:10px',
+      'opacity:0','transition:opacity .4s'
+    ].join(';');
+    t.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.79"/></svg> Dados atualizados — recarregando…';
+    document.body.appendChild(t);
+    requestAnimationFrame(() => t.style.opacity = '1');
+    return t;
+  }
+
+  function _verificar(){
+    fetch('dados.js?v=' + Date.now(), {cache:'no-store', signal:AbortSignal.timeout(5000)})
+      .then(r => r.text())
+      .then(txt => {
+        // Extrai updated_at do texto do arquivo
+        const m = txt.match(/"updated_at"\s*:\s*"([^"]+)"/);
+        if(!m) return;
+        const _tsNovo = m[1];
+        if(_tsNovo !== _tsAtual){
+          // Dados mudaram — mostra toast e recarrega
+          const toast = _criarToast();
+          setTimeout(() => location.reload(), 2500);
+        }
+      })
+      .catch(() => {}) // falha silenciosa
+      .finally(() => setTimeout(_verificar, INTERVALO));
+  }
+
+  setTimeout(_verificar, INTERVALO);
+})();
 </script>
 </body>
 
