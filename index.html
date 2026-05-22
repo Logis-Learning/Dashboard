@@ -1513,7 +1513,7 @@ P1_CHARTS.c5=new Chart(document.getElementById('c5'),{type:'line',data:{labels:d
 P1_CHARTS.c6=new Chart(document.getElementById('c6'),{type:'doughnut',data:{labels:['Concluídos','Em Andamento','Não Iniciados'],datasets:[{data:_d,backgroundColor:[C.green,C.orange,C.red],borderWidth:3,borderColor:'#fff'}]},options:{responsive:false,cutout:'60%',plugins:{legend:{display:false},datalabels:{display:false}}}});}
 
 // Filtros interativos da Visão Geral
-const P1_ROWS = Array.isArray(D?.registros) ? D.registros : [];
+let P1_ROWS = Array.isArray(D?.registros) ? D.registros : [];
 const P1_FILTER_IDS = ['p1-data','p1-turno','p1-setor','p1-tipo'];
 const _fmtBR = n => Number(n || 0).toLocaleString('pt-BR');
 const _norm = v => String(v ?? '').trim();
@@ -1697,7 +1697,66 @@ function initP1Filters(){
   });
   _updateP1Charts(P1_ROWS);
 }
+// Inicializa KPIs diretamente do DADOS (funciona mesmo sem registros.js)
+(function _initKpisDados(){
+  if(!D) return;
+  const _fmt = n => Number(n||0).toLocaleString('pt-BR');
+  const _base = D.total_ativos || D.total || 1;
+  const pctOk  = +(D.pct || 0);
+  const pctAnd = +((D.em_andamento||0) / _base * 100).toFixed(2);
+  const pctNs  = +((D.nao_iniciado ||0) / _base * 100).toFixed(2);
+  const el = id => document.getElementById(id);
+  const set = (id, v) => { const e=el(id); if(e) e.textContent=v; };
+  set('kv-total', _fmt(D.total_ativos));
+  set('kv-ok',    _fmt(D.concluidos));
+  set('kv-and',   _fmt(D.em_andamento));
+  set('kv-ns',    _fmt(D.nao_iniciado));
+  set('kv-min',   D.minutos > 0 ? _fmt(D.minutos) + ' min' : '–');
+  set('kd-ok',    pctOk.toFixed(1) + '% dos colaboradores');
+  set('rg-pct-ok',  pctOk.toFixed(2)  + '%');
+  set('rg-ok',      _fmt(D.concluidos));
+  set('rg-pct-and', pctAnd.toFixed(2) + '%');
+  set('rg-and',     _fmt(D.em_andamento));
+  set('rg-pct-ns',  pctNs.toFixed(2)  + '%');
+  set('rg-ns',      _fmt(D.nao_iniciado));
+  // Atualiza gráficos de status com dados pré-calculados
+  const c1=_chart('c1');
+  if(c1){ c1.data.datasets[0].data=[pctOk,pctNs,pctAnd]; c1.update(); }
+  const c3=_chart('c3');
+  if(c3 && D.status_labels && D.status_values){
+    c3.data.labels=D.status_labels;
+    c3.data.datasets[0].data=D.status_values;
+    c3.data.datasets[0].backgroundColor=[C.green,C.orange,C.red,C.blue,C.indigo,C.purple].slice(0,D.status_values.length);
+    c3.update();
+  }
+  // Turnos
+  if(D.turnos_pct){
+    const c2=_chart('c2');
+    if(c2){
+      c2.data.labels=D.turnos_pct.labels||[];
+      c2.data.datasets[0].data=D.turnos_pct.values||[];
+      c2.data.datasets[0].backgroundColor=[C.blue,C.indigo,C.orange,C.pink,C.purple,C.green,C.red].slice(0,(D.turnos_pct.labels||[]).length);
+      c2.update();
+    }
+  }
+})();
+
 initP1Filters();
+
+// Carrega registros.js separado (arquivo pesado, carregado após o render inicial)
+(function _carregarRegistros(){
+  var s = document.createElement('script');
+  s.src = 'registros.js?v=' + Date.now();
+  s.async = true;
+  s.onload = function(){
+    if(typeof window.REGISTROS !== 'undefined' && Array.isArray(window.REGISTROS)){
+      P1_ROWS = window.REGISTROS;
+      initP1Filters();
+    }
+  };
+  s.onerror = function(){ console.warn('registros.js não encontrado — filtros de Visão Geral indisponíveis'); };
+  document.head.appendChild(s);
+})();
 
 // ── PAGE 2
 // Exclui concluídos (COMPLETED e COMPLETED_AFTER_DUE_DATE) da lista de pendentes
@@ -2972,11 +3031,12 @@ document.head.appendChild(_sty);
 })();
 
 // ═══════════════════════════════════════════════════════════
-// CERTIFICADOS (p8) — por colaborador
+// CERTIFICADOS (p8) — carregado sob demanda via certificados.js
 // ═══════════════════════════════════════════════════════════
 (function(){
   const _isLocal = /localhost|127\.0\.0\.1/.test(window.location.hostname);
-  const _certs   = (D && D.certificados) ? D.certificados : [];
+  let   _certs   = [];           // preenchido quando certificados.js carregar
+  let   _carregado = false;
   let   _filtrosPopulados = false;
 
   // Agrupa certificados por colaborador (mat)
@@ -3193,226 +3253,43 @@ document.head.appendChild(_sty);
 
   window.p8BaixarZip = function(){ window.location.href='/certificados/download'; };
 
-  // Inicializa aba quando aberta
-  const _origGo = window.go;
+  // Carrega certificados.js sob demanda (arquivo separado, não entra no dados.js)
+  function _carregarDados(cb){
+    if(_carregado){ cb(); return; }
+    const s = document.createElement('script');
+    s.src = 'certificados.js?v=' + Date.now();
+    s.onload = function(){
+      _certs = (typeof CERTIFICADOS !== 'undefined') ? CERTIFICADOS : [];
+      _carregado = true;
+      cb();
+    };
+    s.onerror = function(){
+      _carregado = true; // evita loop
+      cb();
+    };
+    document.head.appendChild(s);
+  }
+
+  // ── Inicializa aba quando aberta ─────────────────────────
+  const _goOriginal = window.go;
   window.go = function(pg){
-    if(_origGo) _origGo(pg);
-    if(pg==='p8'){
+    if(_goOriginal) _goOriginal(pg);
+    if(pg === 'p8'){
       const aviso = document.getElementById('p8-aviso-offline');
       if(aviso) aviso.style.display = _isLocal ? 'none' : 'block';
-      if(!_certs.length){
-        const v = document.getElementById('p8-vazio');
-        if(v) v.style.display='block';
-        return;
-      }
-      _popularFiltros();
-      p8Filtrar();
-    }
-  };
-
-  // Popula filtros
-  function _popularFiltros(){
-    const sM = document.getElementById('p8-f-missao');
-    const sF = document.getElementById('p8-f-filial');
-    const sC = document.getElementById('p8-f-cargo');
-    if(!sM) return;
-    const missoes = [...new Set(_certs.map(c=>c.missao).filter(Boolean))].sort();
-    const filiais = [...new Set(_certs.map(c=>c.filial).filter(Boolean))].sort();
-    const cargos  = [...new Set(_certs.map(c=>c.cargo ).filter(Boolean))].sort();
-    missoes.forEach(v=>{ const o=document.createElement('option'); o.value=v; o.textContent=v; sM.appendChild(o); });
-    filiais.forEach(v=>{ const o=document.createElement('option'); o.value=v; o.textContent=v; sF.appendChild(o); });
-    cargos .forEach(v=>{ const o=document.createElement('option'); o.value=v; o.textContent=v; sC.appendChild(o); });
-  }
-
-  function _certsFiltrados(){
-    const mis = (document.getElementById('p8-f-missao')||{}).value||'';
-    const fil = (document.getElementById('p8-f-filial')||{}).value||'';
-    const car = (document.getElementById('p8-f-cargo') ||{}).value||'';
-    const bus = ((document.getElementById('p8-f-busca')||{}).value||'').toLowerCase();
-    return _certs.filter(c=>{
-      if(mis && c.missao !== mis) return false;
-      if(fil && c.filial !== fil) return false;
-      if(car && c.cargo  !== car) return false;
-      if(bus && !c.nome.toLowerCase().includes(bus) && !c.mat.includes(bus)) return false;
-      return true;
-    });
-  }
-
-  window.p8Filtrar = function(){
-    const lista = _certsFiltrados();
-    _renderTabela(lista);
-  };
-
-  function _renderTabela(lista){
-    const tbody = document.getElementById('p8-tbody');
-    const vazio = document.getElementById('p8-vazio');
-    const cont  = document.getElementById('p8-contador');
-    if(!tbody) return;
-    tbody.innerHTML = '';
-    if(!lista.length){
-      if(vazio) vazio.style.display='block';
-      if(cont)  cont.textContent = '';
-      return;
-    }
-    if(vazio) vazio.style.display='none';
-    if(cont)  cont.textContent  = `${lista.length} certificado${lista.length!==1?'s':''}`;
-
-    lista.forEach((c,i)=>{
-      const tr = document.createElement('tr');
-      tr.style.cssText = 'border-bottom:1px solid #f1f5f9;' + (i%2===0?'background:#fafafa':'background:#fff');
-      tr.innerHTML = `
-        <td style="padding:9px 12px;text-align:center">
-          <input type="checkbox" class="p8-chk" data-id="${c.id_cert}" data-nome="${(c.nome||'').replace(/"/g,'')}" data-missao="${(c.missao||'').replace(/"/g,'')}" data-mat="${c.mat||''}" onchange="p8AtualizarBotao()" style="cursor:pointer">
-        </td>
-        <td style="padding:9px 12px;color:#94a3b8">${i+1}</td>
-        <td style="padding:9px 12px;font-weight:600;color:#1e3a5f">${c.nome||'—'}</td>
-        <td style="padding:9px 12px;color:#64748b">${c.mat||'—'}</td>
-        <td style="padding:9px 12px;color:#64748b;font-size:.8rem">${c.cargo||'—'}</td>
-        <td style="padding:9px 12px;color:#64748b">${c.filial||'—'}</td>
-        <td style="padding:9px 12px;color:#334155">${c.missao||'—'}</td>
-        <td style="padding:9px 12px;color:#64748b">${c.data||'—'}</td>
-        <td style="padding:9px 12px;text-align:center">
-          ${_isLocal
-            ? `<button onclick="p8EmitirUm('${c.id_cert}','${(c.nome||'').replace(/'/g,'')}','${(c.missao||'').replace(/'/g,'')}','${c.mat||''}')" style="background:#eff6ff;color:#2563eb;border:none;padding:5px 10px;border-radius:6px;font-size:.78rem;font-weight:600;cursor:pointer">⬇ Baixar</button>`
-            : `<span style="color:#94a3b8;font-size:.78rem">local only</span>`
-          }
-        </td>`;
-      tbody.appendChild(tr);
-    });
-  }
-
-  window.p8ToggleTodos = function(checked){
-    document.querySelectorAll('.p8-chk').forEach(c=>c.checked=checked);
-    p8AtualizarBotao();
-  };
-
-  window.p8AtualizarBotao = function(){
-    const sel = document.querySelectorAll('.p8-chk:checked').length;
-    const btn = document.getElementById('p8-btn-sel');
-    if(btn){ btn.style.display = sel>0 ? 'flex' : 'none'; btn.textContent=''; btn.innerHTML=`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Emitir ${sel} selecionado${sel!==1?'s':''}`; }
-  };
-
-  function _listaParaEmitir(chks){
-    return Array.from(chks).map(c=>({
-      id:     c.dataset.id,
-      nome:   c.dataset.nome,
-      missao: c.dataset.missao,
-      mat:    c.dataset.mat,
-    }));
-  }
-
-  window.p8EmitirSelecionados = function(){
-    const chks = document.querySelectorAll('.p8-chk:checked');
-    if(!chks.length){ alert('Selecione ao menos um certificado.'); return; }
-    _iniciarEmissao(_listaParaEmitir(chks));
-  };
-
-  window.p8EmitirTodos = function(){
-    const lista = _certsFiltrados().map(c=>({id:c.id_cert,nome:c.nome,missao:c.missao,mat:c.mat}));
-    if(!lista.length){ alert('Nenhum certificado visível para emitir.'); return; }
-    if(!confirm(`Emitir ${lista.length} certificados?`)) return;
-    _iniciarEmissao(lista);
-  };
-
-  window.p8EmitirUm = function(id,nome,missao,mat){
-    _iniciarEmissao([{id,nome,missao,mat}]);
-  };
-
-  function _iniciarEmissao(lista){
-    if(!_isLocal){
-      alert('A emissão de certificados só está disponível com o servidor local rodando.\nExecute abrir.bat primeiro.');
-      return;
-    }
-    // Abre modal
-    const modal   = document.getElementById('p8-modal');
-    const progBar = document.getElementById('p8-prog-bar');
-    const progTxt = document.getElementById('p8-prog-txt');
-    const progPct = document.getElementById('p8-prog-pct');
-    const progLst = document.getElementById('p8-prog-lista');
-    const btns    = document.getElementById('p8-modal-btns');
-    modal.style.display   = 'flex';
-    progBar.style.width   = '0%';
-    progTxt.textContent   = 'Conectando ao servidor...';
-    progPct.textContent   = '0%';
-    progLst.innerHTML     = '';
-    btns.style.display    = 'none';
-
-    fetch('/certificados/emitir', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({lista}),
-    })
-    .then(r=>r.json())
-    .then(j=>{
-      if(!j.ok){ progTxt.textContent='Erro: '+j.msg; return; }
-      progTxt.textContent = 'Aguardando robô...';
-
-      // SSE para progresso em tempo real
-      const es = new EventSource('/certificados/stream');
-      es.onmessage = function(e){
-        const msg = JSON.parse(e.data);
-        const tipo = msg.tipo;
-
-        if(tipo==='status'){
-          progTxt.textContent = msg.msg||'';
-        } else if(tipo==='item'){
-          const total = msg.total||lista.length;
-          const idx   = msg.idx||0;
-          const pct   = Math.round(100*idx/total);
-          progBar.style.width = pct+'%';
-          progPct.textContent = pct+'%';
-          progTxt.textContent = `${idx}/${total} — ${msg.nome||''}`;
-
-          const ok  = msg.status==='ok';
-          const err = msg.status==='erro';
-          const div = document.createElement('div');
-          div.style.cssText = `display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:7px;font-size:.82rem;background:${ok?'#f0fdf4':err?'#fef2f2':'#f8fafc'}`;
-          div.innerHTML = `<span style="font-size:1rem">${ok?'✅':err?'❌':'⏳'}</span><span style="font-weight:600;color:#1e3a5f;flex:1">${msg.nome||''}</span><span style="color:#64748b;font-size:.78rem">${msg.missao||''}</span>${err?`<span style="color:#dc2626;font-size:.75rem">${msg.msg||''}</span>`:''}`;
-          progLst.appendChild(div);
-          progLst.scrollTop = progLst.scrollHeight;
-
-        } else if(tipo==='fim'){
-          es.close();
-          progBar.style.width = '100%';
-          progPct.textContent = '100%';
-          const ok  = msg.ok||0;
-          const err = msg.erros||0;
-          progTxt.textContent = `✅ Concluído: ${ok} emitido${ok!==1?'s':''} | ${err} erro${err!==1?'s':''}`;
-          btns.style.display = 'flex';
-        } else if(tipo==='erro'){
-          es.close();
-          progTxt.textContent = '❌ ' + (msg.msg||'Erro desconhecido');
-          btns.style.display = 'flex';
+      _carregarDados(function(){
+        if(!_certs.length){
+          const v = document.getElementById('p8-vazio');
+          if(v) v.style.display = 'block';
+          return;
         }
-      };
-      es.onerror = ()=>{ es.close(); progTxt.textContent='Conexão perdida com o servidor.'; btns.style.display='flex'; };
-    })
-    .catch(e=>{ progTxt.textContent='Erro: '+e.message; });
-  }
-
-  window.p8BaixarZip = function(){
-    window.location.href = '/certificados/download';
-  };
-
-  // Inicializa aba quando aberta
-  const _origGo = window.go;
-  window.go = function(pg){
-    if(_origGo) _origGo(pg);
-    if(pg==='p8'){
-      // Mostra aviso offline se não for local
-      const aviso = document.getElementById('p8-aviso-offline');
-      if(aviso) aviso.style.display = _isLocal ? 'none' : 'block';
-
-      if(!_certs.length){
-        const v = document.getElementById('p8-vazio');
-        if(v) v.style.display='block';
-        return;
-      }
-      _popularFiltros();
-      p8Filtrar();
+        _popularFiltros();
+        p8Filtrar();
+      });
     }
   };
 })();
+
 
 // Auto-refresh silencioso — verifica dados.js a cada 10 min
 (function _autoRefresh(){

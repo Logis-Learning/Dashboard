@@ -1,11 +1,11 @@
 // =============================================================
 // dados.js — Gerado por gerar_dados_dash.py
-// Atualizado em: 22/05/2026 15:29
+// Atualizado em: 22/05/2026 16:58
 // NÃO EDITE — execute: python gerar_dados_dash.py
 // =============================================================
 
 const DADOS = {
-  "updated_at": "22/05/2026 15:29",
+  "updated_at": "22/05/2026 16:58",
   "total_ativos": 700,
   "total": 690,
   "concluidos": 575,
