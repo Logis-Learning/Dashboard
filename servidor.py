@@ -95,6 +95,26 @@ def dados_js():
     return resp
 
 
+@app.route("/registros.js")
+def registros_js():
+    caminho = os.path.join(BASE, "registros.js")
+    if not os.path.exists(caminho):
+        return "window.REGISTROS = [];", 200, {"Content-Type": "application/javascript", **NO_CACHE}
+    resp = send_file(caminho, mimetype="application/javascript", conditional=False)
+    resp.headers.update(NO_CACHE)
+    return resp
+
+
+@app.route("/certificados.js")
+def certificados_js():
+    caminho = os.path.join(BASE, "certificados.js")
+    if not os.path.exists(caminho):
+        return "const CERTIFICADOS = [];", 200, {"Content-Type": "application/javascript", **NO_CACHE}
+    resp = send_file(caminho, mimetype="application/javascript", conditional=False)
+    resp.headers.update(NO_CACHE)
+    return resp
+
+
 # =============================================================================
 # ROTA — STATUS DO SERVIDOR
 # =============================================================================

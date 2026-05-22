@@ -12,6 +12,10 @@ output_powerbi/skore_resultado.csv
 output_powerbi/skore_resultado.json
 output_powerbi/certificados.xlsx
 
+# Arquivos JS gerados (pesados — carregados sob demanda)
+registros.js
+certificados.js
+
 # PDFs de certificados gerados pelo robô
 output_certificados/
 

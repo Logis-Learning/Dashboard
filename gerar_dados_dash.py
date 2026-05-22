@@ -22,10 +22,15 @@ ARQUIVO_MISSOES = os.path.join(BASE_DIR, "input", "missoes_para_exportar.xlsx")
 ARQUIVO_MATRIZ  = os.path.join(BASE_DIR, "input", "matriz_treinamentos.xlsx")
 ARQUIVO_BIBLIO  = os.path.join(BASE_DIR, "input", "biblioteca_colaboradores.xlsx")
 ARQUIVO_CERTS   = os.path.join(BASE_DIR, "output_powerbi", "certificados.xlsx")
+ARQUIVO_CERTS_JS = os.path.join(BASE_DIR, "certificados.js")
+ARQUIVO_REG_JS   = os.path.join(BASE_DIR, "registros.js")
 
 
 def _carregar_certificados() -> list:
-    """Lê output_powerbi/certificados.xlsx e retorna lista de dicts para o dashboard."""
+    """
+    Lê certificados.xlsx, gera certificados.js separado e retorna [] para o dados.js.
+    Certificados ficam num arquivo próprio para não pesar o dados.js.
+    """
     if not os.path.exists(ARQUIVO_CERTS):
         return []
     try:
@@ -45,16 +50,25 @@ def _carregar_certificados() -> list:
             if not id_cert:
                 continue
             resultado.append({
-                "id_cert":    id_cert,
-                "mat":        _c(row, "id do usuário", "id do usuario"),
-                "nome":       _c(row, "nome"),
-                "cargo":      _c(row, "cargo"),
-                "filial":     _c(row, "filial"),
-                "missao":     _c(row, "missao"),
-                "data":       _c(row, "data emissao"),
-                "tipo":       _c(row, "tipo certificado"),
+                "id_cert": id_cert,
+                "mat":     _c(row, "id do usuário", "id do usuario"),
+                "nome":    _c(row, "nome"),
+                "cargo":   _c(row, "cargo"),
+                "filial":  _c(row, "filial"),
+                "missao":  _c(row, "missao"),
+                "data":    _c(row, "data emissao"),
             })
-        return resultado
+
+        # Salva certificados.js separado (não entra no dados.js)
+        js_cert = (
+            "// certificados.js — gerado por gerar_dados_dash.py\n"
+            f"// {len(resultado)} certificados | {datetime.now().strftime('%d/%m/%Y %H:%M')}\n"
+            f"const CERTIFICADOS = {json.dumps(resultado, ensure_ascii=False)};\n"
+        )
+        with open(ARQUIVO_CERTS_JS, "w", encoding="utf-8") as f:
+            f.write(js_cert)
+        print(f"  certificados.js gerado: {len(resultado)} registros")
+        return []  # dados.js fica leve — certificados carregados sob demanda
     except Exception as e:
         print(f"  ⚠ certificados.xlsx: {e}")
         return []
@@ -703,9 +717,9 @@ def calcular_dados(df: pd.DataFrame) -> dict:
         valor = pd.to_numeric(row.get(col, 0), errors="coerce")
         return 0 if pd.isna(valor) else float(valor)
 
-    registros = []
+    registros_raw = []
     for _, row in df_vg.iterrows():
-        registros.append({
+        registros_raw.append({
             "mat": str(row.get(col_user, "")) if col_user else "",
             "status": str(row.get(col_status, row.get("_status", ""))) if col_status else str(row.get("_status", "")),
             "turno": str(row.get("_turno", "")),
@@ -718,6 +732,19 @@ def calcular_dados(df: pd.DataFrame) -> dict:
             "data_matricula": str(row.get(col_dt_mat, "")) if col_dt_mat else "",
             "data_conclusao": str(row.get(col_dt_conc, "")) if col_dt_conc else "",
         })
+
+    # Salva registros.js separado — arquivo pesado não entra no dados.js
+    js_reg = (
+        "// registros.js — gerado por gerar_dados_dash.py\n"
+        f"// {len(registros_raw)} registros | {datetime.now().strftime('%d/%m/%Y %H:%M')}\n"
+        "window.REGISTROS = "
+        + json.dumps(registros_raw, ensure_ascii=False)
+        + ";\n"
+    )
+    with open(ARQUIVO_REG_JS, "w", encoding="utf-8") as f:
+        f.write(js_reg)
+    print(f"  registros.js gerado: {len(registros_raw)} registros")
+    registros = []  # dados.js fica leve — registros carregados sob demanda
 
     def _criar_missoes_data(df_base: pd.DataFrame) -> dict:
         if not col_miss or df_base.empty:
