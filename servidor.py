@@ -9,13 +9,17 @@
 #   Acesso pela rede: http://<IP-do-servidor>:8050
 # =============================================================================
 
+import io
+import json
 import os
+import re
 import sys
 import socket
 import subprocess
 import threading
 import logging
 import time
+import zipfile
 from flask import Flask, send_file, jsonify, Response, stream_with_context, request, make_response
 from matriz_api import atualizar_status_matriz
 
@@ -29,6 +33,16 @@ app = Flask(__name__, static_folder=BASE)
 
 # Estado do processo em execução
 _estado = {"rodando": False, "log": [], "erro": None}
+
+# Estado da emissão de certificados
+_cert_estado = {
+    "rodando": False,
+    "total":   0,
+    "atual":   0,
+    "itens":   [],   # [{idx, nome, missao, status, msg?}]
+    "erro":    None,
+    "pasta":   None,
+}
 
 NO_CACHE = {
     "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
@@ -193,6 +207,143 @@ def log_stream():
         stream_with_context(_gerar()),
         mimetype="text/event-stream",
         headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+    )
+
+
+# =============================================================================
+# ROTAS — CERTIFICADOS
+# =============================================================================
+
+@app.route("/certificados/emitir", methods=["POST"])
+def certificados_emitir():
+    """Recebe lista de certificados e dispara o robô de emissão."""
+    if _cert_estado["rodando"]:
+        return jsonify({"ok": False, "msg": "Emissão já em andamento."}), 409
+
+    dados = request.get_json(force=True) or {}
+    lista = dados.get("lista", [])
+    if not lista:
+        return jsonify({"ok": False, "msg": "Lista vazia."}), 400
+
+    # Reset estado
+    _cert_estado.update({
+        "rodando": True,
+        "total":   len(lista),
+        "atual":   0,
+        "itens":   [],
+        "erro":    None,
+        "pasta":   None,
+    })
+
+    def _rodar():
+        try:
+            script = os.path.join(BASE, "emitir_certificados.py")
+            entrada = json.dumps(lista, ensure_ascii=False).encode("utf-8")
+
+            proc = subprocess.Popen(
+                [sys.executable, "-u", script, "-"],
+                cwd=BASE,
+                stdin=subprocess.PIPE,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                env=os.environ.copy(),
+            )
+            stdout_data, _ = proc.communicate(input=entrada)
+
+            for linha in stdout_data.decode("utf-8", errors="replace").splitlines():
+                linha = linha.strip()
+                if not linha:
+                    continue
+                try:
+                    msg = json.loads(linha)
+                except Exception:
+                    continue
+
+                tipo = msg.get("tipo", "")
+                if tipo == "inicio":
+                    _cert_estado["total"] = msg.get("total", len(lista))
+                elif tipo == "item":
+                    _cert_estado["atual"] = msg.get("idx", 0)
+                    _cert_estado["itens"].append(msg)
+                elif tipo == "fim":
+                    _cert_estado["pasta"] = msg.get("pasta")
+                elif tipo == "erro":
+                    _cert_estado["erro"] = msg.get("msg")
+
+        except Exception as e:
+            _cert_estado["erro"] = str(e)
+        finally:
+            _cert_estado["rodando"] = False
+
+    threading.Thread(target=_rodar, daemon=True).start()
+    return jsonify({"ok": True, "msg": f"Emissão de {len(lista)} certificados iniciada."})
+
+
+@app.route("/certificados/status")
+def certificados_status():
+    """Retorna estado atual da emissão (para polling)."""
+    return jsonify({
+        "rodando": _cert_estado["rodando"],
+        "total":   _cert_estado["total"],
+        "atual":   _cert_estado["atual"],
+        "itens":   _cert_estado["itens"],
+        "erro":    _cert_estado["erro"],
+    })
+
+
+@app.route("/certificados/stream")
+def certificados_stream():
+    """SSE — envia progresso em tempo real."""
+    def _gerar():
+        ultimo = 0
+        while True:
+            itens = _cert_estado["itens"]
+            if len(itens) > ultimo:
+                for item in itens[ultimo:]:
+                    yield f"data: {json.dumps(item, ensure_ascii=False)}\n\n"
+                ultimo = len(itens)
+            if not _cert_estado["rodando"]:
+                resumo = {
+                    "tipo":   "fim",
+                    "total":  _cert_estado["total"],
+                    "atual":  _cert_estado["atual"],
+                    "erro":   _cert_estado["erro"],
+                    "pasta":  _cert_estado["pasta"],
+                }
+                yield f"data: {json.dumps(resumo, ensure_ascii=False)}\n\n"
+                break
+            time.sleep(0.4)
+
+    return Response(
+        stream_with_context(_gerar()),
+        mimetype="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+    )
+
+
+@app.route("/certificados/download")
+def certificados_download():
+    """Compacta todos os PDFs gerados e devolve como .zip."""
+    pasta = _cert_estado.get("pasta") or os.path.join(BASE, "output_certificados")
+    if not os.path.isdir(pasta):
+        return jsonify({"ok": False, "msg": "Nenhum certificado gerado ainda."}), 404
+
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as zf:
+        for raiz, _, arquivos in os.walk(pasta):
+            for arq in arquivos:
+                if arq.lower().endswith(".pdf"):
+                    caminho = os.path.join(raiz, arq)
+                    arcname = os.path.relpath(caminho, pasta)
+                    zf.write(caminho, arcname)
+    buf.seek(0)
+
+    ts = time.strftime("%Y%m%d_%H%M")
+    return send_file(
+        buf,
+        mimetype="application/zip",
+        as_attachment=True,
+        download_name=f"certificados_{ts}.zip",
     )
 
 

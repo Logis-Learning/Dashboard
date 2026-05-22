@@ -549,6 +549,10 @@ window.ChartDataLabels={};
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/></svg>
     Matriz
   </button>
+  <button class="tab" data-t="p8" onclick="go('p8')">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="6"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/><rect x="2" y="14" width="20" height="8" rx="2"/></svg>
+    Certificados
+  </button>
 </nav>
 
 <!-- ══════════════════ PAGE 1: VISÃO GERAL ══════════════════ -->
@@ -1316,6 +1320,106 @@ window.ChartDataLabels={};
       </div>
     </div>
   </main>
+</div>
+
+<!-- ══════════════════ PAGE 8: CERTIFICADOS ══════════════════ -->
+<div class="lay" id="p8" style="display:none">
+  <main class="mn">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:10px">
+      <h2 style="font-size:1.1rem;font-weight:700;color:#1e3a5f;display:flex;align-items:center;gap:8px">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="6"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><rect x="2" y="14" width="20" height="8" rx="2"/></svg>
+        Certificados Emitidos
+      </h2>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <span id="p8-contador" style="font-size:.85rem;color:#64748b"></span>
+        <button id="p8-btn-sel" onclick="p8EmitirSelecionados()" style="display:none;background:#2563eb;color:#fff;border:none;padding:8px 16px;border-radius:8px;font-size:.85rem;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Emitir Selecionados
+        </button>
+        <button onclick="p8EmitirTodos()" style="background:#16a34a;color:#fff;border:none;padding:8px 16px;border-radius:8px;font-size:.85rem;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Emitir Todos
+        </button>
+      </div>
+    </div>
+
+    <!-- Filtros -->
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
+      <select id="p8-f-missao" onchange="p8Filtrar()" style="padding:6px 10px;border:1px solid #e2e8f0;border-radius:7px;font-size:.83rem;color:#334155;min-width:180px">
+        <option value="">Todas as missões</option>
+      </select>
+      <select id="p8-f-filial" onchange="p8Filtrar()" style="padding:6px 10px;border:1px solid #e2e8f0;border-radius:7px;font-size:.83rem;color:#334155">
+        <option value="">Todas as filiais</option>
+      </select>
+      <select id="p8-f-cargo" onchange="p8Filtrar()" style="padding:6px 10px;border:1px solid #e2e8f0;border-radius:7px;font-size:.83rem;color:#334155">
+        <option value="">Todos os cargos</option>
+      </select>
+      <input id="p8-f-busca" oninput="p8Filtrar()" placeholder="Buscar nome ou matrícula..." style="padding:6px 10px;border:1px solid #e2e8f0;border-radius:7px;font-size:.83rem;color:#334155;min-width:200px">
+    </div>
+
+    <!-- Aviso servidor offline -->
+    <div id="p8-aviso-offline" style="display:none;background:#fef2f2;border:1px solid #fca5a5;border-radius:8px;padding:12px 16px;margin-bottom:14px;font-size:.85rem;color:#991b1b">
+      ⚠ Emissão disponível apenas com o servidor local rodando (abrir.bat).
+    </div>
+
+    <!-- Tabela -->
+    <div style="background:#fff;border-radius:12px;border:1px solid #e2e8f0;overflow:hidden">
+      <table style="width:100%;border-collapse:collapse;font-size:.83rem">
+        <thead>
+          <tr style="background:#f8fafc;border-bottom:1px solid #e2e8f0">
+            <th style="padding:10px 12px;text-align:center;width:40px">
+              <input type="checkbox" id="p8-chk-all" onchange="p8ToggleTodos(this.checked)" style="cursor:pointer">
+            </th>
+            <th style="padding:10px 12px;text-align:left;color:#64748b;font-weight:600">#</th>
+            <th style="padding:10px 12px;text-align:left;color:#64748b;font-weight:600">Nome</th>
+            <th style="padding:10px 12px;text-align:left;color:#64748b;font-weight:600">Matrícula</th>
+            <th style="padding:10px 12px;text-align:left;color:#64748b;font-weight:600">Cargo</th>
+            <th style="padding:10px 12px;text-align:left;color:#64748b;font-weight:600">Filial</th>
+            <th style="padding:10px 12px;text-align:left;color:#64748b;font-weight:600">Missão</th>
+            <th style="padding:10px 12px;text-align:left;color:#64748b;font-weight:600">Data Emissão</th>
+            <th style="padding:10px 12px;text-align:center;color:#64748b;font-weight:600">Ação</th>
+          </tr>
+        </thead>
+        <tbody id="p8-tbody"></tbody>
+      </table>
+      <div id="p8-vazio" style="display:none;padding:40px;text-align:center;color:#94a3b8;font-size:.9rem">
+        Nenhum certificado encontrado. Execute <strong>extrair_certificados.py</strong> primeiro.
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Modal progresso certificados -->
+<div id="p8-modal" style="display:none;position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,.55);backdrop-filter:blur(4px);align-items:center;justify-content:center">
+  <div style="background:#fff;border-radius:16px;padding:32px;width:min(540px,95vw);box-shadow:0 20px 60px rgba(0,0,0,.25)">
+    <div style="font-size:1.05rem;font-weight:700;color:#1e3a5f;margin-bottom:20px;display:flex;align-items:center;gap:10px">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="6"/><rect x="2" y="14" width="20" height="8" rx="2"/></svg>
+      Emitindo Certificados
+    </div>
+
+    <!-- Barra de progresso -->
+    <div style="background:#e2e8f0;border-radius:99px;height:10px;margin-bottom:8px;overflow:hidden">
+      <div id="p8-prog-bar" style="height:100%;background:linear-gradient(90deg,#2563eb,#1d4ed8);border-radius:99px;width:0%;transition:width .4s"></div>
+    </div>
+    <div style="display:flex;justify-content:space-between;font-size:.8rem;color:#64748b;margin-bottom:20px">
+      <span id="p8-prog-txt">Iniciando...</span>
+      <span id="p8-prog-pct">0%</span>
+    </div>
+
+    <!-- Lista de status por pessoa -->
+    <div id="p8-prog-lista" style="max-height:240px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;margin-bottom:20px"></div>
+
+    <!-- Botões finais -->
+    <div id="p8-modal-btns" style="display:none;gap:10px;justify-content:flex-end">
+      <button onclick="p8BaixarZip()" style="background:#16a34a;color:#fff;border:none;padding:10px 20px;border-radius:8px;font-size:.85rem;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Baixar ZIP
+      </button>
+      <button onclick="document.getElementById('p8-modal').style.display='none'" style="background:#f1f5f9;color:#334155;border:none;padding:10px 20px;border-radius:8px;font-size:.85rem;font-weight:600;cursor:pointer">
+        Fechar
+      </button>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -2872,6 +2976,217 @@ document.head.appendChild(_sty);
       }
       setTimeout(_ping, 5000);
     });
+})();
+
+// ═══════════════════════════════════════════════════════════
+// CERTIFICADOS (p8)
+// ═══════════════════════════════════════════════════════════
+(function(){
+  const _isLocal = /localhost|127\.0\.0\.1/.test(window.location.hostname);
+  const _certs   = (D && D.certificados) ? D.certificados : [];
+
+  // Popula filtros
+  function _popularFiltros(){
+    const sM = document.getElementById('p8-f-missao');
+    const sF = document.getElementById('p8-f-filial');
+    const sC = document.getElementById('p8-f-cargo');
+    if(!sM) return;
+    const missoes = [...new Set(_certs.map(c=>c.missao).filter(Boolean))].sort();
+    const filiais = [...new Set(_certs.map(c=>c.filial).filter(Boolean))].sort();
+    const cargos  = [...new Set(_certs.map(c=>c.cargo ).filter(Boolean))].sort();
+    missoes.forEach(v=>{ const o=document.createElement('option'); o.value=v; o.textContent=v; sM.appendChild(o); });
+    filiais.forEach(v=>{ const o=document.createElement('option'); o.value=v; o.textContent=v; sF.appendChild(o); });
+    cargos .forEach(v=>{ const o=document.createElement('option'); o.value=v; o.textContent=v; sC.appendChild(o); });
+  }
+
+  function _certsFiltrados(){
+    const mis = (document.getElementById('p8-f-missao')||{}).value||'';
+    const fil = (document.getElementById('p8-f-filial')||{}).value||'';
+    const car = (document.getElementById('p8-f-cargo') ||{}).value||'';
+    const bus = ((document.getElementById('p8-f-busca')||{}).value||'').toLowerCase();
+    return _certs.filter(c=>{
+      if(mis && c.missao !== mis) return false;
+      if(fil && c.filial !== fil) return false;
+      if(car && c.cargo  !== car) return false;
+      if(bus && !c.nome.toLowerCase().includes(bus) && !c.mat.includes(bus)) return false;
+      return true;
+    });
+  }
+
+  window.p8Filtrar = function(){
+    const lista = _certsFiltrados();
+    _renderTabela(lista);
+  };
+
+  function _renderTabela(lista){
+    const tbody = document.getElementById('p8-tbody');
+    const vazio = document.getElementById('p8-vazio');
+    const cont  = document.getElementById('p8-contador');
+    if(!tbody) return;
+    tbody.innerHTML = '';
+    if(!lista.length){
+      if(vazio) vazio.style.display='block';
+      if(cont)  cont.textContent = '';
+      return;
+    }
+    if(vazio) vazio.style.display='none';
+    if(cont)  cont.textContent  = `${lista.length} certificado${lista.length!==1?'s':''}`;
+
+    lista.forEach((c,i)=>{
+      const tr = document.createElement('tr');
+      tr.style.cssText = 'border-bottom:1px solid #f1f5f9;' + (i%2===0?'background:#fafafa':'background:#fff');
+      tr.innerHTML = `
+        <td style="padding:9px 12px;text-align:center">
+          <input type="checkbox" class="p8-chk" data-id="${c.id_cert}" data-nome="${(c.nome||'').replace(/"/g,'')}" data-missao="${(c.missao||'').replace(/"/g,'')}" data-mat="${c.mat||''}" onchange="p8AtualizarBotao()" style="cursor:pointer">
+        </td>
+        <td style="padding:9px 12px;color:#94a3b8">${i+1}</td>
+        <td style="padding:9px 12px;font-weight:600;color:#1e3a5f">${c.nome||'—'}</td>
+        <td style="padding:9px 12px;color:#64748b">${c.mat||'—'}</td>
+        <td style="padding:9px 12px;color:#64748b;font-size:.8rem">${c.cargo||'—'}</td>
+        <td style="padding:9px 12px;color:#64748b">${c.filial||'—'}</td>
+        <td style="padding:9px 12px;color:#334155">${c.missao||'—'}</td>
+        <td style="padding:9px 12px;color:#64748b">${c.data||'—'}</td>
+        <td style="padding:9px 12px;text-align:center">
+          ${_isLocal
+            ? `<button onclick="p8EmitirUm('${c.id_cert}','${(c.nome||'').replace(/'/g,'')}','${(c.missao||'').replace(/'/g,'')}','${c.mat||''}')" style="background:#eff6ff;color:#2563eb;border:none;padding:5px 10px;border-radius:6px;font-size:.78rem;font-weight:600;cursor:pointer">⬇ Baixar</button>`
+            : `<span style="color:#94a3b8;font-size:.78rem">local only</span>`
+          }
+        </td>`;
+      tbody.appendChild(tr);
+    });
+  }
+
+  window.p8ToggleTodos = function(checked){
+    document.querySelectorAll('.p8-chk').forEach(c=>c.checked=checked);
+    p8AtualizarBotao();
+  };
+
+  window.p8AtualizarBotao = function(){
+    const sel = document.querySelectorAll('.p8-chk:checked').length;
+    const btn = document.getElementById('p8-btn-sel');
+    if(btn){ btn.style.display = sel>0 ? 'flex' : 'none'; btn.textContent=''; btn.innerHTML=`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Emitir ${sel} selecionado${sel!==1?'s':''}`; }
+  };
+
+  function _listaParaEmitir(chks){
+    return Array.from(chks).map(c=>({
+      id:     c.dataset.id,
+      nome:   c.dataset.nome,
+      missao: c.dataset.missao,
+      mat:    c.dataset.mat,
+    }));
+  }
+
+  window.p8EmitirSelecionados = function(){
+    const chks = document.querySelectorAll('.p8-chk:checked');
+    if(!chks.length){ alert('Selecione ao menos um certificado.'); return; }
+    _iniciarEmissao(_listaParaEmitir(chks));
+  };
+
+  window.p8EmitirTodos = function(){
+    const lista = _certsFiltrados().map(c=>({id:c.id_cert,nome:c.nome,missao:c.missao,mat:c.mat}));
+    if(!lista.length){ alert('Nenhum certificado visível para emitir.'); return; }
+    if(!confirm(`Emitir ${lista.length} certificados?`)) return;
+    _iniciarEmissao(lista);
+  };
+
+  window.p8EmitirUm = function(id,nome,missao,mat){
+    _iniciarEmissao([{id,nome,missao,mat}]);
+  };
+
+  function _iniciarEmissao(lista){
+    if(!_isLocal){
+      alert('A emissão de certificados só está disponível com o servidor local rodando.\nExecute abrir.bat primeiro.');
+      return;
+    }
+    // Abre modal
+    const modal   = document.getElementById('p8-modal');
+    const progBar = document.getElementById('p8-prog-bar');
+    const progTxt = document.getElementById('p8-prog-txt');
+    const progPct = document.getElementById('p8-prog-pct');
+    const progLst = document.getElementById('p8-prog-lista');
+    const btns    = document.getElementById('p8-modal-btns');
+    modal.style.display   = 'flex';
+    progBar.style.width   = '0%';
+    progTxt.textContent   = 'Conectando ao servidor...';
+    progPct.textContent   = '0%';
+    progLst.innerHTML     = '';
+    btns.style.display    = 'none';
+
+    fetch('/certificados/emitir', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({lista}),
+    })
+    .then(r=>r.json())
+    .then(j=>{
+      if(!j.ok){ progTxt.textContent='Erro: '+j.msg; return; }
+      progTxt.textContent = 'Aguardando robô...';
+
+      // SSE para progresso em tempo real
+      const es = new EventSource('/certificados/stream');
+      es.onmessage = function(e){
+        const msg = JSON.parse(e.data);
+        const tipo = msg.tipo;
+
+        if(tipo==='status'){
+          progTxt.textContent = msg.msg||'';
+        } else if(tipo==='item'){
+          const total = msg.total||lista.length;
+          const idx   = msg.idx||0;
+          const pct   = Math.round(100*idx/total);
+          progBar.style.width = pct+'%';
+          progPct.textContent = pct+'%';
+          progTxt.textContent = `${idx}/${total} — ${msg.nome||''}`;
+
+          const ok  = msg.status==='ok';
+          const err = msg.status==='erro';
+          const div = document.createElement('div');
+          div.style.cssText = `display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:7px;font-size:.82rem;background:${ok?'#f0fdf4':err?'#fef2f2':'#f8fafc'}`;
+          div.innerHTML = `<span style="font-size:1rem">${ok?'✅':err?'❌':'⏳'}</span><span style="font-weight:600;color:#1e3a5f;flex:1">${msg.nome||''}</span><span style="color:#64748b;font-size:.78rem">${msg.missao||''}</span>${err?`<span style="color:#dc2626;font-size:.75rem">${msg.msg||''}</span>`:''}`;
+          progLst.appendChild(div);
+          progLst.scrollTop = progLst.scrollHeight;
+
+        } else if(tipo==='fim'){
+          es.close();
+          progBar.style.width = '100%';
+          progPct.textContent = '100%';
+          const ok  = msg.ok||0;
+          const err = msg.erros||0;
+          progTxt.textContent = `✅ Concluído: ${ok} emitido${ok!==1?'s':''} | ${err} erro${err!==1?'s':''}`;
+          btns.style.display = 'flex';
+        } else if(tipo==='erro'){
+          es.close();
+          progTxt.textContent = '❌ ' + (msg.msg||'Erro desconhecido');
+          btns.style.display = 'flex';
+        }
+      };
+      es.onerror = ()=>{ es.close(); progTxt.textContent='Conexão perdida com o servidor.'; btns.style.display='flex'; };
+    })
+    .catch(e=>{ progTxt.textContent='Erro: '+e.message; });
+  }
+
+  window.p8BaixarZip = function(){
+    window.location.href = '/certificados/download';
+  };
+
+  // Inicializa aba quando aberta
+  const _origGo = window.go;
+  window.go = function(pg){
+    if(_origGo) _origGo(pg);
+    if(pg==='p8'){
+      // Mostra aviso offline se não for local
+      const aviso = document.getElementById('p8-aviso-offline');
+      if(aviso) aviso.style.display = _isLocal ? 'none' : 'block';
+
+      if(!_certs.length){
+        const v = document.getElementById('p8-vazio');
+        if(v) v.style.display='block';
+        return;
+      }
+      _popularFiltros();
+      p8Filtrar();
+    }
+  };
 })();
 
 // Auto-refresh silencioso — verifica dados.js a cada 10 min

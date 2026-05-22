@@ -10,6 +10,10 @@ input/relatorios_skore/
 output_powerbi/relatorio_matriculas.xlsx
 output_powerbi/skore_resultado.csv
 output_powerbi/skore_resultado.json
+output_powerbi/certificados.xlsx
+
+# PDFs de certificados gerados pelo robô
+output_certificados/
 
 # Arquivos obsoletos e temporários
 obsoleto/

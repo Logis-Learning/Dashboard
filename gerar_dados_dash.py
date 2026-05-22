@@ -21,6 +21,43 @@ ARQUIVO_ATIVOS  = os.path.join(BASE_DIR, "input", "Ativos.xlsx")
 ARQUIVO_MISSOES = os.path.join(BASE_DIR, "input", "missoes_para_exportar.xlsx")
 ARQUIVO_MATRIZ  = os.path.join(BASE_DIR, "input", "matriz_treinamentos.xlsx")
 ARQUIVO_BIBLIO  = os.path.join(BASE_DIR, "input", "biblioteca_colaboradores.xlsx")
+ARQUIVO_CERTS   = os.path.join(BASE_DIR, "output_powerbi", "certificados.xlsx")
+
+
+def _carregar_certificados() -> list:
+    """Lê output_powerbi/certificados.xlsx e retorna lista de dicts para o dashboard."""
+    if not os.path.exists(ARQUIVO_CERTS):
+        return []
+    try:
+        df = pd.read_excel(ARQUIVO_CERTS, dtype=str).fillna("")
+        cols = {str(c).strip().lower(): c for c in df.columns}
+
+        def _c(row, *nomes):
+            for n in nomes:
+                col = cols.get(n)
+                if col and str(row.get(col, "")).strip():
+                    return str(row[col]).strip()
+            return ""
+
+        resultado = []
+        for _, row in df.iterrows():
+            id_cert = _c(row, "id do certificado")
+            if not id_cert:
+                continue
+            resultado.append({
+                "id_cert":    id_cert,
+                "mat":        _c(row, "id do usuário", "id do usuario"),
+                "nome":       _c(row, "nome"),
+                "cargo":      _c(row, "cargo"),
+                "filial":     _c(row, "filial"),
+                "missao":     _c(row, "missao"),
+                "data":       _c(row, "data emissao"),
+                "tipo":       _c(row, "tipo certificado"),
+            })
+        return resultado
+    except Exception as e:
+        print(f"  ⚠ certificados.xlsx: {e}")
+        return []
 
 
 def _carregar_biblio_gestor_turno() -> dict:
@@ -747,6 +784,7 @@ def calcular_dados(df: pd.DataFrame) -> dict:
     # Mantém a aba Matriz intacta, mas NÃO sobrescreve a Visão Geral com dados
     # sintéticos do produto cartesiano. Os KPIs vêm do arquivo real (df_vg).
     matriz_dashboard = _dados_matriz_dashboard(biblio_gt)
+    certificados     = _carregar_certificados()
 
     dados = {
         "updated_at":     datetime.now().strftime("%d/%m/%Y %H:%M"),
@@ -774,6 +812,7 @@ def calcular_dados(df: pd.DataFrame) -> dict:
         "cargo_bar":     cargo_bar,
         "registros":     registros,
         "matriz":        matriz_dashboard,
+        "certificados":  certificados,
     }
     return dados
 
