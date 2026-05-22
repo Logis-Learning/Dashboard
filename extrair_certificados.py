@@ -101,33 +101,28 @@ with sync_playwright() as p:
     # ── Monta URL para busca em lote ─────────────────────────
     print("  [3/4] Extraindo dados...")
 
-    if captured["url"]:
-        # Usa a URL capturada como base, remove filtro de usuário se houver
-        base_url = captured["url"]
-        # Remove limit para buscar tudo, adiciona limit alto
-        base_url = re.sub(r"&limit=\d+", "", base_url)
-        base_url = re.sub(r"limit=\d+&?", "", base_url)
-        base_url += "&limit=5000&sorts=users.name"
-        print(f"  ✓ Explore capturado: {captured['explore']}")
-    else:
-        # Fallback: usa campos conhecidos da explore de certificados
-        print("  ⚠ URL não capturada — usando explore padrão de certificados")
-        fields = ",".join([
-            "users.id", "users.name", "users.email", "users.username",
-            "metadata.cpf", "metadata.cargo", "metadata.filial",
-            "metadata.departamento", "leaders.name_list",
-            "certificates.id", "certificates.created_date",
-            "certificates.certificate_type",
-            "certificates.content_or_mission_name",
-            "certificates.workload_minutes",
-            "certificates.template_id",
-        ])
-        base_url = (
-            f"{LOOKER_URL}/explore/skore/certificates.json"
-            f"?fields={fields}"
-            f"&f[users.isDeleted]=No"
-            f"&limit=5000&sorts=users.name"
-        )
+    # Sempre usa mission_definitions (explore confiável) com certificates.id
+    # Filtra só quem tem certificado emitido (completed)
+    print("  Usando explore mission_definitions com certificates.id...")
+    fields = ",".join([
+        "users.id", "users.name", "users.email", "users.username",
+        "metadata.cpf", "metadata.cargo", "metadata.filial",
+        "metadata.departamento", "leaders.name_list",
+        "mission_definitions.name",
+        "mission_definitions.workload_minutes",
+        "certificates.created_date",
+        "certificates.id",
+        "enrollments.detailed_status",
+    ])
+    base_url = (
+        f"{LOOKER_URL}/explore/skore/mission_definitions.json"
+        f"?fields={fields}"
+        f"&f[users.isDeleted]=No"
+        f"&f[users.active]=Yes"
+        f"&f[enrollments.detailed_status]=COMPLETED,COMPLETED_AFTER_DUE_DATE"
+        f"&f[certificates.id]=-NULL"
+        f"&limit=5000&sorts=users.name"
+    )
 
     # Garante sessão Looker ativa
     page.goto(f"{LOOKER_URL}/embed/dashboards/2122",
@@ -152,27 +147,7 @@ with sync_playwright() as p:
     texto = fetch_looker(base_url)
 
     if not texto or texto.strip() in ("[]", ""):
-        # Tenta com a explore de mission_definitions incluindo certificates.id
-        print("  ⚠ Resultado vazio — tentando explore alternativa...")
-        fields_alt = ",".join([
-            "users.id", "users.name", "users.email",
-            "metadata.cpf", "metadata.cargo", "metadata.filial",
-            "leaders.name_list",
-            "mission_definitions.name",
-            "mission_definitions.workload_minutes",
-            "certificates.created_date",
-            "certificates.id",
-            "enrollments.detailed_status",
-        ])
-        alt_url = (
-            f"{LOOKER_URL}/explore/skore/mission_definitions.json"
-            f"?fields={fields_alt}"
-            f"&f[users.isDeleted]=No"
-            f"&f[users.active]=Yes"
-            f"&f[enrollments.detailed_status]=COMPLETED,COMPLETED_AFTER_DUE_DATE"
-            f"&limit=5000&sorts=users.name"
-        )
-        texto = fetch_looker(alt_url)
+        print("  ⚠ Resultado vazio — verifique credenciais em config.py")
 
     browser.close()
 
@@ -208,10 +183,9 @@ def _campo(row, *candidatos, default=""):
 
 rows_out = []
 for row in dados:
-    id_cert = _campo(row,
-        "certificates.id", "certificates.certificate_id",
-        "certificates.validation_id", "certificate.id"
-    )
+    id_cert = _campo(row, "certificates.id")
+    if not id_cert:
+        continue  # pula quem não tem certificado
     rows_out.append({
         "ID do Usuário":       _campo(row, "users.id"),
         "Nome":                _campo(row, "users.name"),
@@ -221,18 +195,9 @@ for row in dados:
         "Filial":              _campo(row, "metadata.filial"),
         "Departamento":        _campo(row, "metadata.departamento"),
         "Gestor":              _campo(row, "leaders.name_list"),
-        "Missao":              _campo(row,
-                                   "certificates.content_or_mission_name",
-                                   "mission_definitions.name"),
-        "Carga Horaria (min)": _campo(row,
-                                   "certificates.workload_minutes",
-                                   "mission_definitions.workload_minutes"),
-        "Tipo Certificado":    _campo(row,
-                                   "certificates.certificate_type",
-                                   "certificates.type"),
-        "Template ID":         _campo(row,
-                                   "certificates.template_id",
-                                   "certificates.content_id"),
+        "Missao":              _campo(row, "mission_definitions.name"),
+        "Carga Horaria (min)": _campo(row, "mission_definitions.workload_minutes"),
+        "Status":              _campo(row, "enrollments.detailed_status"),
         "Data Emissao":        _campo(row, "certificates.created_date"),
         "ID do Certificado":   id_cert,
     })
