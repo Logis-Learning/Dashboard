@@ -1697,6 +1697,50 @@ function initP1Filters(){
   });
   _updateP1Charts(P1_ROWS);
 }
+// Inicializa KPIs diretamente do DADOS (funciona mesmo sem registros.js)
+(function _initKpisDados(){
+  if(!D) return;
+  const _fmt = n => Number(n||0).toLocaleString('pt-BR');
+  const _base = D.total_ativos || D.total || 1;
+  const pctOk  = +(D.pct || 0);
+  const pctAnd = +((D.em_andamento||0) / _base * 100).toFixed(2);
+  const pctNs  = +((D.nao_iniciado ||0) / _base * 100).toFixed(2);
+  const el = id => document.getElementById(id);
+  const set = (id, v) => { const e=el(id); if(e) e.textContent=v; };
+  set('kv-total', _fmt(D.total_ativos));
+  set('kv-ok',    _fmt(D.concluidos));
+  set('kv-and',   _fmt(D.em_andamento));
+  set('kv-ns',    _fmt(D.nao_iniciado));
+  set('kv-min',   D.minutos > 0 ? _fmt(D.minutos) + ' min' : '–');
+  set('kd-ok',    pctOk.toFixed(1) + '% dos colaboradores');
+  set('rg-pct-ok',  pctOk.toFixed(2)  + '%');
+  set('rg-ok',      _fmt(D.concluidos));
+  set('rg-pct-and', pctAnd.toFixed(2) + '%');
+  set('rg-and',     _fmt(D.em_andamento));
+  set('rg-pct-ns',  pctNs.toFixed(2)  + '%');
+  set('rg-ns',      _fmt(D.nao_iniciado));
+  // Atualiza gráficos de status com dados pré-calculados
+  const c1=_chart('c1');
+  if(c1){ c1.data.datasets[0].data=[pctOk,pctNs,pctAnd]; c1.update(); }
+  const c3=_chart('c3');
+  if(c3 && D.status_labels && D.status_values){
+    c3.data.labels=D.status_labels;
+    c3.data.datasets[0].data=D.status_values;
+    c3.data.datasets[0].backgroundColor=[C.green,C.orange,C.red,C.blue,C.indigo,C.purple].slice(0,D.status_values.length);
+    c3.update();
+  }
+  // Turnos
+  if(D.turnos_pct){
+    const c2=_chart('c2');
+    if(c2){
+      c2.data.labels=D.turnos_pct.labels||[];
+      c2.data.datasets[0].data=D.turnos_pct.values||[];
+      c2.data.datasets[0].backgroundColor=[C.blue,C.indigo,C.orange,C.pink,C.purple,C.green,C.red].slice(0,(D.turnos_pct.labels||[]).length);
+      c2.update();
+    }
+  }
+})();
+
 initP1Filters();
 
 // Carrega registros.js separado (arquivo pesado, carregado após o render inicial)
