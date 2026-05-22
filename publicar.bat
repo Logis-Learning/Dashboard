@@ -27,7 +27,7 @@ echo [3/4] Atualizando index.html...
 copy /Y dashboard_simpar.html index.html > nul
 
 echo [4/4] Publicando no GitHub...
-git add dados.js index.html dashboard_simpar.html
+git add dados.js index.html dashboard_simpar.html gerar_dados_dash.py servidor.py
 git commit -m "Atualiza dados"
 git push
 
