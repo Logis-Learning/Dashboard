@@ -16,8 +16,8 @@ if errorlevel 1 (
     exit /b 1
 )
 
-copy /Y dashboard_simpar.html index.html > nul
-git add dados.js index.html dashboard_simpar.html
+copy /Y dashboard_simpar.html index.html > nul 2>&1
+git add dados.js index.html dashboard_simpar.html gerar_dados_dash.py
 git commit -m "Atualiza dados automatico" >> "%LOG%" 2>&1
 git push >> "%LOG%" 2>&1
 
