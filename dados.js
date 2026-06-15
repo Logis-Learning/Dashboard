@@ -1,12 +1,12 @@
 // =============================================================
 // dados.js — Gerado por gerar_dados_dash.py
-// Atualizado em: 15/06/2026 09:00
+// Atualizado em: 15/06/2026 10:01
 // NÃO EDITE — execute: python gerar_dados_dash.py
 // =============================================================
 
 const DADOS = {
-  "updated_at": "15/06/2026 09:00",
-  "total_ativos": 875,
+  "updated_at": "15/06/2026 10:01",
+  "total_ativos": 874,
   "total": 30,
   "concluidos": 27,
   "em_andamento": 2,
@@ -15,7 +15,7 @@ const DADOS = {
   "cancelados": 0,
   "pendentes": 3,
   "pct": 3.1,
-  "minutos": 11760,
+  "minutos": 11790,
   "status_labels": [
     "COMPLETED",
     "IN_PROGRESS",
@@ -31,7 +31,7 @@ const DADOS = {
       "JSL GRU AERO"
     ],
     "concluidos": [
-      212
+      213
     ],
     "pendentes": [
       5
@@ -91,198 +91,204 @@ const DADOS = {
       },
       {
         "pos": 3,
-        "nome": "IST1489 - MOVIMENTAÇÃO DE CARGAS POR EMPILHADEIRA/TRANSPALETEIRA - GRU",
+        "nome": "IST1488 - RECUSA DO TRANSELEVADOR - GRU",
         "pct": 100.0,
         "cor": "#16a34a"
       },
       {
         "pos": 4,
-        "nome": "IST1490 - Linha Saúde - GRU",
+        "nome": "IST1489 - MOVIMENTAÇÃO DE CARGAS POR EMPILHADEIRA/TRANSPALETEIRA - GRU",
         "pct": 100.0,
         "cor": "#16a34a"
       },
       {
         "pos": 5,
-        "nome": "IST1502 - Inspeção e Serviços - GRU",
+        "nome": "IST1490 - Linha Saúde - GRU",
         "pct": 100.0,
         "cor": "#16a34a"
       },
       {
         "pos": 6,
-        "nome": "IST1503 - MOVIMENTAÇÃO MANUAL DE CARGAS - GRU",
+        "nome": "IST1502 - Inspeção e Serviços - GRU",
         "pct": 100.0,
         "cor": "#16a34a"
       },
       {
         "pos": 7,
-        "nome": "PRO-GRU0002 - INFORMAÇÃO DOCUMENTADA E ELABORAÇÃO DE DOCUMENTO",
+        "nome": "IST1503 - MOVIMENTAÇÃO MANUAL DE CARGAS - GRU",
         "pct": 100.0,
         "cor": "#16a34a"
       },
       {
         "pos": 8,
-        "nome": "PRO-GRU0006 - TREINAMENTOS",
+        "nome": "PRO-GRU0002 - INFORMAÇÃO DOCUMENTADA E ELABORAÇÃO DE DOCUMENTO",
         "pct": 100.0,
         "cor": "#16a34a"
       },
       {
         "pos": 9,
-        "nome": "PRO9156 - ARMAZENAGEM NA IMPORTAÇÃO - GRU",
+        "nome": "PRO-GRU0006 - TREINAMENTOS",
         "pct": 100.0,
         "cor": "#16a34a"
       },
       {
         "pos": 10,
-        "nome": "PRO9206 - Boas Práticas de Documentação - GRU",
+        "nome": "PRO9156 - ARMAZENAGEM NA IMPORTAÇÃO - GRU",
         "pct": 100.0,
         "cor": "#16a34a"
       },
       {
         "pos": 11,
-        "nome": "PRO9162 - RECEBIMENTO DE IMPORTAÇÃO - GRU",
+        "nome": "PRO9206 - Boas Práticas de Documentação - GRU",
         "pct": 100.0,
         "cor": "#16a34a"
       },
       {
         "pos": 12,
-        "nome": "PRO9210 - Exportação - GRU",
+        "nome": "PRO9162 - RECEBIMENTO DE IMPORTAÇÃO - GRU",
         "pct": 100.0,
         "cor": "#16a34a"
       },
       {
         "pos": 13,
-        "nome": "PRO9220 - QUALIFICAÇÃO DE FORNECEDORES - GRU",
+        "nome": "PRO9210 - Exportação - GRU",
         "pct": 100.0,
         "cor": "#16a34a"
       },
       {
         "pos": 14,
+        "nome": "PRO9220 - QUALIFICAÇÃO DE FORNECEDORES - GRU",
+        "pct": 100.0,
+        "cor": "#16a34a"
+      },
+      {
+        "pos": 15,
         "nome": "PRO9215 - PLANO DE ATENDIMENTO DE EMERGÊNCIA - GRU",
         "pct": 93.3,
         "cor": "#16a34a"
       },
       {
-        "pos": 15,
+        "pos": 16,
         "nome": "PRO9214 - GERENCIAMENTO DE RESIDUOS - GRU",
         "pct": 93.3,
         "cor": "#16a34a"
       },
       {
-        "pos": 16,
+        "pos": 17,
         "nome": "PRO9199 - ENTREGA, CONTROLE E UTILIZAÇÃO DE EPI - GRU",
         "pct": 93.3,
         "cor": "#16a34a"
       },
       {
-        "pos": 17,
+        "pos": 18,
         "nome": "PRO9201 - CLASSIFICAÇÃO E IDENTIFICAÇÃO DE ACIDENTES E INCIDENTES - GRU",
         "pct": 93.3,
         "cor": "#16a34a"
       },
       {
-        "pos": 18,
+        "pos": 19,
         "nome": "M0154 - Manual da Qualidade - BPA E Distribuição de Cargas - GRU",
         "pct": 93.3,
         "cor": "#16a34a"
       },
       {
-        "pos": 19,
+        "pos": 20,
         "nome": "PRO9200 - INSPEÇÃO DE EQUIPAMENTOS DE MOVIMENTAÇÃO - GRU",
         "pct": 91.7,
         "cor": "#16a34a"
       },
       {
-        "pos": 20,
+        "pos": 21,
         "nome": "IST1585 - DESPALETIZAÇÃO DE VOOS - GRU",
         "pct": 85.7,
         "cor": "#16a34a"
       },
       {
-        "pos": 21,
+        "pos": 22,
         "nome": "PRO9209 - EXPEDIÇÃO DE IMPORTAÇÃO",
         "pct": 83.3,
         "cor": "#16a34a"
       },
       {
-        "pos": 22,
+        "pos": 23,
         "nome": "PRO9207 - Estacionamento e Gestão de Docas - GRU",
         "pct": 80.0,
         "cor": "#16a34a"
       },
       {
-        "pos": 23,
+        "pos": 24,
         "nome": "PRO9202 - CONTROLE DE CARGAS PERIGOSAS - GRU",
         "pct": 75.0,
         "cor": "#ea580c"
       },
       {
-        "pos": 24,
+        "pos": 25,
         "nome": "PRO9256 - Manutenção Predial ",
         "pct": 75.0,
         "cor": "#ea580c"
       },
       {
-        "pos": 25,
+        "pos": 26,
         "nome": "PRO9260 - MANUTENÇÃO CORRETIVA E PREVENTIVA DE EQUIPAMENTOS DE MOVIMENTAÇÃO - GRU  ",
         "pct": 75.0,
         "cor": "#ea580c"
       },
       {
-        "pos": 26,
+        "pos": 27,
         "nome": "IST1553 - Gestão de Docas",
         "pct": 75.0,
         "cor": "#ea580c"
       },
       {
-        "pos": 27,
+        "pos": 28,
         "nome": "IST1556 - MOVIMENTAÇÃO DE CARGAS PERIGOSAS - IMPORTAÇÃO E EXPORTAÇÃO - GRU",
         "pct": 75.0,
         "cor": "#ea580c"
       },
       {
-        "pos": 28,
+        "pos": 29,
         "nome": "IST1554 - Estacionamento",
         "pct": 66.7,
         "cor": "#ea580c"
       },
       {
-        "pos": 29,
+        "pos": 30,
         "nome": "PRO-GRU0005 - AUDITORIA INTERNA E AUTO INSPEÇÃO",
         "pct": 66.7,
         "cor": "#ea580c"
       },
       {
-        "pos": 30,
+        "pos": 31,
         "nome": "PRO-GRU0003 - NÃO CONFORMIDADE E AÇÃO CORRETIVA",
         "pct": 66.7,
         "cor": "#ea580c"
       },
       {
-        "pos": 31,
+        "pos": 32,
         "nome": "PRO-GRU0010 - CONTROLE DE MUDANÇA",
         "pct": 66.7,
         "cor": "#ea580c"
       },
       {
-        "pos": 32,
+        "pos": 33,
         "nome": "PRO9157 - INVENTÁRIO",
         "pct": 66.7,
         "cor": "#ea580c"
       },
       {
-        "pos": 33,
+        "pos": 34,
         "nome": "PRO9164 - Courier",
         "pct": 66.7,
         "cor": "#ea580c"
       },
       {
-        "pos": 34,
+        "pos": 35,
         "nome": "Mapeamento de Processos - JSL",
         "pct": 50.0,
         "cor": "#dc2626"
       },
       {
-        "pos": 35,
+        "pos": 36,
         "nome": "IST1558 - Amarração de ULD - Lâmina Palete Aéreo - GRU",
         "pct": 50.0,
         "cor": "#dc2626"
@@ -302,6 +308,15 @@ const DADOS = {
         "missao": "IST1487 - PONTO ZERO - GRU",
         "total": 2,
         "concluidos": 2,
+        "pendentes": 0,
+        "pct": 100.0,
+        "bg": "#f0fdf4",
+        "cor": "#16a34a"
+      },
+      {
+        "missao": "IST1488 - RECUSA DO TRANSELEVADOR - GRU",
+        "total": 1,
+        "concluidos": 1,
         "pendentes": 0,
         "pct": 100.0,
         "bg": "#f0fdf4",
@@ -607,41 +622,42 @@ const DADOS = {
     ],
     "bar_pendentes": {
       "labels": [
-        "IST1558 - Amarração de ULD - Lâmina Palete Aéreo - GRU",
         "Mapeamento de Processos - JSL",
-        "PRO9157 - INVENTÁRIO",
+        "IST1558 - Amarração de ULD - Lâmina Palete Aéreo - GRU",
         "PRO-GRU0010 - CONTROLE DE MUDANÇA",
-        "PRO-GRU0005 - AUDITORIA INTERNA E AUTO INSPEÇÃO",
-        "PRO9164 - Courier",
         "PRO-GRU0003 - NÃO CONFORMIDADE E AÇÃO CORRETIVA",
+        "PRO9157 - INVENTÁRIO",
+        "PRO9164 - Courier",
+        "PRO-GRU0005 - AUDITORIA INTERNA E AUTO INSPEÇÃO",
         "IST1554 - Estacionamento",
+        "PRO9256 - Manutenção Predial ",
         "IST1553 - Gestão de Docas",
         "PRO9260 - MANUTENÇÃO CORRETIVA E PREVENTIVA DE EQUIPAMENTOS DE MOVIMENTAÇÃO - GRU  ",
         "PRO9202 - CONTROLE DE CARGAS PERIGOSAS - GRU",
         "IST1556 - MOVIMENTAÇÃO DE CARGAS PERIGOSAS - IMPORTAÇÃO E EXPORTAÇÃO - GRU",
-        "PRO9256 - Manutenção Predial ",
         "PRO9207 - Estacionamento e Gestão de Docas - GRU",
         "PRO9209 - EXPEDIÇÃO DE IMPORTAÇÃO",
         "IST1585 - DESPALETIZAÇÃO DE VOOS - GRU",
         "PRO9200 - INSPEÇÃO DE EQUIPAMENTOS DE MOVIMENTAÇÃO - GRU",
-        "M0154 - Manual da Qualidade - BPA E Distribuição de Cargas - GRU",
+        "PRO9199 - ENTREGA, CONTROLE E UTILIZAÇÃO DE EPI - GRU",
         "PRO9201 - CLASSIFICAÇÃO E IDENTIFICAÇÃO DE ACIDENTES E INCIDENTES - GRU",
         "PRO9215 - PLANO DE ATENDIMENTO DE EMERGÊNCIA - GRU",
-        "PRO9199 - ENTREGA, CONTROLE E UTILIZAÇÃO DE EPI - GRU",
+        "M0154 - Manual da Qualidade - BPA E Distribuição de Cargas - GRU",
         "PRO9214 - GERENCIAMENTO DE RESIDUOS - GRU",
-        "PRO9156 - ARMAZENAGEM NA IMPORTAÇÃO - GRU",
+        "PRO9210 - Exportação - GRU",
         "PRO9220 - QUALIFICAÇÃO DE FORNECEDORES - GRU",
-        "IST1490 - Linha Saúde - GRU",
         "IST1489 - MOVIMENTAÇÃO DE CARGAS POR EMPILHADEIRA/TRANSPALETEIRA - GRU",
-        "IST1487 - PONTO ZERO - GRU",
+        "IST1488 - RECUSA DO TRANSELEVADOR - GRU",
         "IST1502 - Inspeção e Serviços - GRU",
-        "IST1484 - Gestão de Racks - GRU",
+        "IST1490 - Linha Saúde - GRU",
+        "PRO9156 - ARMAZENAGEM NA IMPORTAÇÃO - GRU",
+        "PRO-GRU0006 - TREINAMENTOS",
         "PRO9206 - Boas Práticas de Documentação - GRU",
         "PRO9162 - RECEBIMENTO DE IMPORTAÇÃO - GRU",
-        "PRO9210 - Exportação - GRU",
-        "PRO-GRU0006 - TREINAMENTOS",
         "PRO-GRU0002 - INFORMAÇÃO DOCUMENTADA E ELABORAÇÃO DE DOCUMENTO",
-        "IST1503 - MOVIMENTAÇÃO MANUAL DE CARGAS - GRU"
+        "IST1503 - MOVIMENTAÇÃO MANUAL DE CARGAS - GRU",
+        "IST1484 - Gestão de Racks - GRU",
+        "IST1487 - PONTO ZERO - GRU"
       ],
       "values": [
         1,
@@ -666,6 +682,7 @@ const DADOS = {
         2,
         2,
         2,
+        0,
         0,
         0,
         0,
@@ -695,8 +712,8 @@ const DADOS = {
     "maior_pct": 100.0,
     "menor_nome": "IST1558 - Amarração de ULD - Lâmina Palete Aéreo - GRU",
     "menor_pct": 50.0,
-    "media_pct": 85.2,
-    "total_missoes": 35
+    "media_pct": 85.6,
+    "total_missoes": 36
   },
   "missoes_jsl": {
     "ranking": [
@@ -714,198 +731,204 @@ const DADOS = {
       },
       {
         "pos": 3,
-        "nome": "IST1489 - MOVIMENTAÇÃO DE CARGAS POR EMPILHADEIRA/TRANSPALETEIRA - GRU",
+        "nome": "IST1488 - RECUSA DO TRANSELEVADOR - GRU",
         "pct": 100.0,
         "cor": "#16a34a"
       },
       {
         "pos": 4,
-        "nome": "IST1490 - Linha Saúde - GRU",
+        "nome": "IST1489 - MOVIMENTAÇÃO DE CARGAS POR EMPILHADEIRA/TRANSPALETEIRA - GRU",
         "pct": 100.0,
         "cor": "#16a34a"
       },
       {
         "pos": 5,
-        "nome": "IST1502 - Inspeção e Serviços - GRU",
+        "nome": "IST1490 - Linha Saúde - GRU",
         "pct": 100.0,
         "cor": "#16a34a"
       },
       {
         "pos": 6,
-        "nome": "IST1503 - MOVIMENTAÇÃO MANUAL DE CARGAS - GRU",
+        "nome": "IST1502 - Inspeção e Serviços - GRU",
         "pct": 100.0,
         "cor": "#16a34a"
       },
       {
         "pos": 7,
-        "nome": "PRO-GRU0002 - INFORMAÇÃO DOCUMENTADA E ELABORAÇÃO DE DOCUMENTO",
+        "nome": "IST1503 - MOVIMENTAÇÃO MANUAL DE CARGAS - GRU",
         "pct": 100.0,
         "cor": "#16a34a"
       },
       {
         "pos": 8,
-        "nome": "PRO-GRU0006 - TREINAMENTOS",
+        "nome": "PRO-GRU0002 - INFORMAÇÃO DOCUMENTADA E ELABORAÇÃO DE DOCUMENTO",
         "pct": 100.0,
         "cor": "#16a34a"
       },
       {
         "pos": 9,
-        "nome": "PRO9156 - ARMAZENAGEM NA IMPORTAÇÃO - GRU",
+        "nome": "PRO-GRU0006 - TREINAMENTOS",
         "pct": 100.0,
         "cor": "#16a34a"
       },
       {
         "pos": 10,
-        "nome": "PRO9206 - Boas Práticas de Documentação - GRU",
+        "nome": "PRO9156 - ARMAZENAGEM NA IMPORTAÇÃO - GRU",
         "pct": 100.0,
         "cor": "#16a34a"
       },
       {
         "pos": 11,
-        "nome": "PRO9162 - RECEBIMENTO DE IMPORTAÇÃO - GRU",
+        "nome": "PRO9206 - Boas Práticas de Documentação - GRU",
         "pct": 100.0,
         "cor": "#16a34a"
       },
       {
         "pos": 12,
-        "nome": "PRO9210 - Exportação - GRU",
+        "nome": "PRO9162 - RECEBIMENTO DE IMPORTAÇÃO - GRU",
         "pct": 100.0,
         "cor": "#16a34a"
       },
       {
         "pos": 13,
-        "nome": "PRO9220 - QUALIFICAÇÃO DE FORNECEDORES - GRU",
+        "nome": "PRO9210 - Exportação - GRU",
         "pct": 100.0,
         "cor": "#16a34a"
       },
       {
         "pos": 14,
+        "nome": "PRO9220 - QUALIFICAÇÃO DE FORNECEDORES - GRU",
+        "pct": 100.0,
+        "cor": "#16a34a"
+      },
+      {
+        "pos": 15,
         "nome": "PRO9215 - PLANO DE ATENDIMENTO DE EMERGÊNCIA - GRU",
         "pct": 93.3,
         "cor": "#16a34a"
       },
       {
-        "pos": 15,
+        "pos": 16,
         "nome": "PRO9214 - GERENCIAMENTO DE RESIDUOS - GRU",
         "pct": 93.3,
         "cor": "#16a34a"
       },
       {
-        "pos": 16,
+        "pos": 17,
         "nome": "PRO9199 - ENTREGA, CONTROLE E UTILIZAÇÃO DE EPI - GRU",
         "pct": 93.3,
         "cor": "#16a34a"
       },
       {
-        "pos": 17,
+        "pos": 18,
         "nome": "PRO9201 - CLASSIFICAÇÃO E IDENTIFICAÇÃO DE ACIDENTES E INCIDENTES - GRU",
         "pct": 93.3,
         "cor": "#16a34a"
       },
       {
-        "pos": 18,
+        "pos": 19,
         "nome": "M0154 - Manual da Qualidade - BPA E Distribuição de Cargas - GRU",
         "pct": 93.3,
         "cor": "#16a34a"
       },
       {
-        "pos": 19,
+        "pos": 20,
         "nome": "PRO9200 - INSPEÇÃO DE EQUIPAMENTOS DE MOVIMENTAÇÃO - GRU",
         "pct": 91.7,
         "cor": "#16a34a"
       },
       {
-        "pos": 20,
+        "pos": 21,
         "nome": "IST1585 - DESPALETIZAÇÃO DE VOOS - GRU",
         "pct": 85.7,
         "cor": "#16a34a"
       },
       {
-        "pos": 21,
+        "pos": 22,
         "nome": "PRO9209 - EXPEDIÇÃO DE IMPORTAÇÃO",
         "pct": 83.3,
         "cor": "#16a34a"
       },
       {
-        "pos": 22,
+        "pos": 23,
         "nome": "PRO9207 - Estacionamento e Gestão de Docas - GRU",
         "pct": 80.0,
         "cor": "#16a34a"
       },
       {
-        "pos": 23,
+        "pos": 24,
         "nome": "PRO9202 - CONTROLE DE CARGAS PERIGOSAS - GRU",
         "pct": 75.0,
         "cor": "#ea580c"
       },
       {
-        "pos": 24,
+        "pos": 25,
         "nome": "PRO9256 - Manutenção Predial ",
         "pct": 75.0,
         "cor": "#ea580c"
       },
       {
-        "pos": 25,
+        "pos": 26,
         "nome": "PRO9260 - MANUTENÇÃO CORRETIVA E PREVENTIVA DE EQUIPAMENTOS DE MOVIMENTAÇÃO - GRU  ",
         "pct": 75.0,
         "cor": "#ea580c"
       },
       {
-        "pos": 26,
+        "pos": 27,
         "nome": "IST1553 - Gestão de Docas",
         "pct": 75.0,
         "cor": "#ea580c"
       },
       {
-        "pos": 27,
+        "pos": 28,
         "nome": "IST1556 - MOVIMENTAÇÃO DE CARGAS PERIGOSAS - IMPORTAÇÃO E EXPORTAÇÃO - GRU",
         "pct": 75.0,
         "cor": "#ea580c"
       },
       {
-        "pos": 28,
+        "pos": 29,
         "nome": "IST1554 - Estacionamento",
         "pct": 66.7,
         "cor": "#ea580c"
       },
       {
-        "pos": 29,
+        "pos": 30,
         "nome": "PRO-GRU0005 - AUDITORIA INTERNA E AUTO INSPEÇÃO",
         "pct": 66.7,
         "cor": "#ea580c"
       },
       {
-        "pos": 30,
+        "pos": 31,
         "nome": "PRO-GRU0003 - NÃO CONFORMIDADE E AÇÃO CORRETIVA",
         "pct": 66.7,
         "cor": "#ea580c"
       },
       {
-        "pos": 31,
+        "pos": 32,
         "nome": "PRO-GRU0010 - CONTROLE DE MUDANÇA",
         "pct": 66.7,
         "cor": "#ea580c"
       },
       {
-        "pos": 32,
+        "pos": 33,
         "nome": "PRO9157 - INVENTÁRIO",
         "pct": 66.7,
         "cor": "#ea580c"
       },
       {
-        "pos": 33,
+        "pos": 34,
         "nome": "PRO9164 - Courier",
         "pct": 66.7,
         "cor": "#ea580c"
       },
       {
-        "pos": 34,
+        "pos": 35,
         "nome": "Mapeamento de Processos - JSL",
         "pct": 50.0,
         "cor": "#dc2626"
       },
       {
-        "pos": 35,
+        "pos": 36,
         "nome": "IST1558 - Amarração de ULD - Lâmina Palete Aéreo - GRU",
         "pct": 50.0,
         "cor": "#dc2626"
@@ -925,6 +948,15 @@ const DADOS = {
         "missao": "IST1487 - PONTO ZERO - GRU",
         "total": 2,
         "concluidos": 2,
+        "pendentes": 0,
+        "pct": 100.0,
+        "bg": "#f0fdf4",
+        "cor": "#16a34a"
+      },
+      {
+        "missao": "IST1488 - RECUSA DO TRANSELEVADOR - GRU",
+        "total": 1,
+        "concluidos": 1,
         "pendentes": 0,
         "pct": 100.0,
         "bg": "#f0fdf4",
@@ -1230,41 +1262,42 @@ const DADOS = {
     ],
     "bar_pendentes": {
       "labels": [
-        "IST1558 - Amarração de ULD - Lâmina Palete Aéreo - GRU",
         "Mapeamento de Processos - JSL",
-        "PRO9157 - INVENTÁRIO",
+        "IST1558 - Amarração de ULD - Lâmina Palete Aéreo - GRU",
         "PRO-GRU0010 - CONTROLE DE MUDANÇA",
-        "PRO-GRU0005 - AUDITORIA INTERNA E AUTO INSPEÇÃO",
-        "PRO9164 - Courier",
         "PRO-GRU0003 - NÃO CONFORMIDADE E AÇÃO CORRETIVA",
+        "PRO9157 - INVENTÁRIO",
+        "PRO9164 - Courier",
+        "PRO-GRU0005 - AUDITORIA INTERNA E AUTO INSPEÇÃO",
         "IST1554 - Estacionamento",
+        "PRO9256 - Manutenção Predial ",
         "IST1553 - Gestão de Docas",
         "PRO9260 - MANUTENÇÃO CORRETIVA E PREVENTIVA DE EQUIPAMENTOS DE MOVIMENTAÇÃO - GRU  ",
         "PRO9202 - CONTROLE DE CARGAS PERIGOSAS - GRU",
         "IST1556 - MOVIMENTAÇÃO DE CARGAS PERIGOSAS - IMPORTAÇÃO E EXPORTAÇÃO - GRU",
-        "PRO9256 - Manutenção Predial ",
         "PRO9207 - Estacionamento e Gestão de Docas - GRU",
         "PRO9209 - EXPEDIÇÃO DE IMPORTAÇÃO",
         "IST1585 - DESPALETIZAÇÃO DE VOOS - GRU",
         "PRO9200 - INSPEÇÃO DE EQUIPAMENTOS DE MOVIMENTAÇÃO - GRU",
-        "M0154 - Manual da Qualidade - BPA E Distribuição de Cargas - GRU",
+        "PRO9199 - ENTREGA, CONTROLE E UTILIZAÇÃO DE EPI - GRU",
         "PRO9201 - CLASSIFICAÇÃO E IDENTIFICAÇÃO DE ACIDENTES E INCIDENTES - GRU",
         "PRO9215 - PLANO DE ATENDIMENTO DE EMERGÊNCIA - GRU",
-        "PRO9199 - ENTREGA, CONTROLE E UTILIZAÇÃO DE EPI - GRU",
+        "M0154 - Manual da Qualidade - BPA E Distribuição de Cargas - GRU",
         "PRO9214 - GERENCIAMENTO DE RESIDUOS - GRU",
-        "PRO9156 - ARMAZENAGEM NA IMPORTAÇÃO - GRU",
+        "PRO9210 - Exportação - GRU",
         "PRO9220 - QUALIFICAÇÃO DE FORNECEDORES - GRU",
-        "IST1490 - Linha Saúde - GRU",
         "IST1489 - MOVIMENTAÇÃO DE CARGAS POR EMPILHADEIRA/TRANSPALETEIRA - GRU",
-        "IST1487 - PONTO ZERO - GRU",
+        "IST1488 - RECUSA DO TRANSELEVADOR - GRU",
         "IST1502 - Inspeção e Serviços - GRU",
-        "IST1484 - Gestão de Racks - GRU",
+        "IST1490 - Linha Saúde - GRU",
+        "PRO9156 - ARMAZENAGEM NA IMPORTAÇÃO - GRU",
+        "PRO-GRU0006 - TREINAMENTOS",
         "PRO9206 - Boas Práticas de Documentação - GRU",
         "PRO9162 - RECEBIMENTO DE IMPORTAÇÃO - GRU",
-        "PRO9210 - Exportação - GRU",
-        "PRO-GRU0006 - TREINAMENTOS",
         "PRO-GRU0002 - INFORMAÇÃO DOCUMENTADA E ELABORAÇÃO DE DOCUMENTO",
-        "IST1503 - MOVIMENTAÇÃO MANUAL DE CARGAS - GRU"
+        "IST1503 - MOVIMENTAÇÃO MANUAL DE CARGAS - GRU",
+        "IST1484 - Gestão de Racks - GRU",
+        "IST1487 - PONTO ZERO - GRU"
       ],
       "values": [
         1,
@@ -1301,6 +1334,7 @@ const DADOS = {
         0,
         0,
         0,
+        0,
         0
       ]
     },
@@ -1310,7 +1344,7 @@ const DADOS = {
       "Não Iniciados"
     ],
     "donut_values": [
-      305,
+      306,
       2,
       25
     ],
@@ -1318,10 +1352,10 @@ const DADOS = {
     "maior_pct": 100.0,
     "menor_nome": "IST1558 - Amarração de ULD - Lâmina Palete Aéreo - GRU",
     "menor_pct": 50.0,
-    "media_pct": 85.2,
-    "total_missoes": 35,
-    "total": 332,
-    "concluidos": 305,
+    "media_pct": 85.6,
+    "total_missoes": 36,
+    "total": 333,
+    "concluidos": 306,
     "em_andamento": 2,
     "nao_iniciado": 25,
     "pct": 91.9
@@ -1383,9 +1417,9 @@ const DADOS = {
       },
       {
         "missao": "ASSÉDIO MORAL? ATITUDE PROIBIDA!",
-        "total": 883,
+        "total": 882,
         "concluidos": 292,
-        "pendentes": 591,
+        "pendentes": 590,
         "pct": 33.1,
         "bg": "#fef2f2",
         "cor": "#dc2626"
@@ -1452,7 +1486,7 @@ const DADOS = {
         606,
         599,
         599,
-        591,
+        590,
         31
       ]
     },
@@ -1463,7 +1497,7 @@ const DADOS = {
     ],
     "donut_values": [
       1384,
-      3100,
+      3099,
       184
     ],
     "maior_nome": "Direção Preventiva",
@@ -1472,11 +1506,11 @@ const DADOS = {
     "menor_pct": 20.6,
     "media_pct": 29.4,
     "total_missoes": 7,
-    "total": 4668,
+    "total": 4667,
     "concluidos": 1384,
-    "em_andamento": 3100,
+    "em_andamento": 3099,
     "nao_iniciado": 184,
-    "pct": 29.6
+    "pct": 29.7
   },
   "colaboradores_pendentes": [
     {
@@ -1499,7 +1533,7 @@ const DADOS = {
       "filial": "JSL GRU AERO",
       "turno": "CHARLIE",
       "gestor": "GABRIEL CAMARGO DE SOUZA",
-      "missao": "PRO9199 - ENTREGA, CONTROLE E UTILIZAÇÃO DE EPI - GRU",
+      "missao": "PRO9214 - GERENCIAMENTO DE RESIDUOS - GRU",
       "status": "NOT_STARTED",
       "prog": ""
     },
@@ -1535,6 +1569,18 @@ const DADOS = {
       "filial": "JSL GRU AERO",
       "turno": "CHARLIE",
       "gestor": "GABRIEL CAMARGO DE SOUZA",
+      "missao": "PRO9199 - ENTREGA, CONTROLE E UTILIZAÇÃO DE EPI - GRU",
+      "status": "NOT_STARTED",
+      "prog": ""
+    },
+    {
+      "nome": "ALEX KENJI TOYOTANI",
+      "mat": "30169480",
+      "cargo": "GERENTE DE OPERACOES I",
+      "depto": "GERENCIA",
+      "filial": "",
+      "turno": "ADM",
+      "gestor": "ANDRÉ BUENO",
       "missao": "PRO9214 - GERENCIAMENTO DE RESIDUOS - GRU",
       "status": "NOT_STARTED",
       "prog": ""
@@ -1559,7 +1605,7 @@ const DADOS = {
       "filial": "",
       "turno": "ADM",
       "gestor": "ANDRÉ BUENO",
-      "missao": "PRO9202 - CONTROLE DE CARGAS PERIGOSAS - GRU",
+      "missao": "PRO-GRU0010 - CONTROLE DE MUDANÇA",
       "status": "NOT_STARTED",
       "prog": ""
     },
@@ -1583,7 +1629,7 @@ const DADOS = {
       "filial": "",
       "turno": "ADM",
       "gestor": "ANDRÉ BUENO",
-      "missao": "PRO9214 - GERENCIAMENTO DE RESIDUOS - GRU",
+      "missao": "PRO9201 - CLASSIFICAÇÃO E IDENTIFICAÇÃO DE ACIDENTES E INCIDENTES - GRU",
       "status": "NOT_STARTED",
       "prog": ""
     },
@@ -1595,31 +1641,7 @@ const DADOS = {
       "filial": "",
       "turno": "ADM",
       "gestor": "ANDRÉ BUENO",
-      "missao": "PRO9209 - EXPEDIÇÃO DE IMPORTAÇÃO",
-      "status": "NOT_STARTED",
-      "prog": ""
-    },
-    {
-      "nome": "ALEX KENJI TOYOTANI",
-      "mat": "30169480",
-      "cargo": "GERENTE DE OPERACOES I",
-      "depto": "GERENCIA",
-      "filial": "",
-      "turno": "ADM",
-      "gestor": "ANDRÉ BUENO",
-      "missao": "PRO9199 - ENTREGA, CONTROLE E UTILIZAÇÃO DE EPI - GRU",
-      "status": "NOT_STARTED",
-      "prog": ""
-    },
-    {
-      "nome": "ALEX KENJI TOYOTANI",
-      "mat": "30169480",
-      "cargo": "GERENTE DE OPERACOES I",
-      "depto": "GERENCIA",
-      "filial": "",
-      "turno": "ADM",
-      "gestor": "ANDRÉ BUENO",
-      "missao": "Mapeamento de Processos - JSL",
+      "missao": "PRO9215 - PLANO DE ATENDIMENTO DE EMERGÊNCIA - GRU",
       "status": "NOT_STARTED",
       "prog": ""
     },
@@ -1655,19 +1677,7 @@ const DADOS = {
       "filial": "",
       "turno": "ADM",
       "gestor": "ANDRÉ BUENO",
-      "missao": "IST1585 - DESPALETIZAÇÃO DE VOOS - GRU",
-      "status": "NOT_STARTED",
-      "prog": ""
-    },
-    {
-      "nome": "ALEX KENJI TOYOTANI",
-      "mat": "30169480",
-      "cargo": "GERENTE DE OPERACOES I",
-      "depto": "GERENCIA",
-      "filial": "",
-      "turno": "ADM",
-      "gestor": "ANDRÉ BUENO",
-      "missao": "PRO9201 - CLASSIFICAÇÃO E IDENTIFICAÇÃO DE ACIDENTES E INCIDENTES - GRU",
+      "missao": "PRO9260 - MANUTENÇÃO CORRETIVA E PREVENTIVA DE EQUIPAMENTOS DE MOVIMENTAÇÃO - GRU",
       "status": "NOT_STARTED",
       "prog": ""
     },
@@ -1691,7 +1701,7 @@ const DADOS = {
       "filial": "",
       "turno": "ADM",
       "gestor": "ANDRÉ BUENO",
-      "missao": "PRO9260 - MANUTENÇÃO CORRETIVA E PREVENTIVA DE EQUIPAMENTOS DE MOVIMENTAÇÃO - GRU",
+      "missao": "IST1553 - Gestão de Docas",
       "status": "NOT_STARTED",
       "prog": ""
     },
@@ -1703,7 +1713,31 @@ const DADOS = {
       "filial": "",
       "turno": "ADM",
       "gestor": "ANDRÉ BUENO",
-      "missao": "PRO-GRU0010 - CONTROLE DE MUDANÇA",
+      "missao": "IST1585 - DESPALETIZAÇÃO DE VOOS - GRU",
+      "status": "NOT_STARTED",
+      "prog": ""
+    },
+    {
+      "nome": "ALEX KENJI TOYOTANI",
+      "mat": "30169480",
+      "cargo": "GERENTE DE OPERACOES I",
+      "depto": "GERENCIA",
+      "filial": "",
+      "turno": "ADM",
+      "gestor": "ANDRÉ BUENO",
+      "missao": "PRO9199 - ENTREGA, CONTROLE E UTILIZAÇÃO DE EPI - GRU",
+      "status": "NOT_STARTED",
+      "prog": ""
+    },
+    {
+      "nome": "ALEX KENJI TOYOTANI",
+      "mat": "30169480",
+      "cargo": "GERENTE DE OPERACOES I",
+      "depto": "GERENCIA",
+      "filial": "",
+      "turno": "ADM",
+      "gestor": "ANDRÉ BUENO",
+      "missao": "PRO9202 - CONTROLE DE CARGAS PERIGOSAS - GRU",
       "status": "NOT_STARTED",
       "prog": ""
     },
@@ -1727,7 +1761,7 @@ const DADOS = {
       "filial": "",
       "turno": "ADM",
       "gestor": "ANDRÉ BUENO",
-      "missao": "IST1553 - Gestão de Docas",
+      "missao": "PRO9209 - EXPEDIÇÃO DE IMPORTAÇÃO",
       "status": "NOT_STARTED",
       "prog": ""
     },
@@ -1739,31 +1773,7 @@ const DADOS = {
       "filial": "",
       "turno": "ADM",
       "gestor": "ANDRÉ BUENO",
-      "missao": "PRO9215 - PLANO DE ATENDIMENTO DE EMERGÊNCIA - GRU",
-      "status": "NOT_STARTED",
-      "prog": ""
-    },
-    {
-      "nome": "ALEX KENJI TOYOTANI",
-      "mat": "30169480",
-      "cargo": "GERENTE DE OPERACOES I",
-      "depto": "GERENCIA",
-      "filial": "",
-      "turno": "ADM",
-      "gestor": "ANDRÉ BUENO",
-      "missao": "PRO9164 - Courier",
-      "status": "NOT_STARTED",
-      "prog": ""
-    },
-    {
-      "nome": "ALEX KENJI TOYOTANI",
-      "mat": "30169480",
-      "cargo": "GERENTE DE OPERACOES I",
-      "depto": "GERENCIA",
-      "filial": "",
-      "turno": "ADM",
-      "gestor": "ANDRÉ BUENO",
-      "missao": "PRO9207 - Estacionamento e Gestão de Docas - GRU",
+      "missao": "Mapeamento de Processos - JSL",
       "status": "NOT_STARTED",
       "prog": ""
     },
@@ -1788,6 +1798,30 @@ const DADOS = {
       "turno": "ADM",
       "gestor": "ANDRÉ BUENO",
       "missao": "PRO9157 - INVENTÁRIO",
+      "status": "NOT_STARTED",
+      "prog": ""
+    },
+    {
+      "nome": "ALEX KENJI TOYOTANI",
+      "mat": "30169480",
+      "cargo": "GERENTE DE OPERACOES I",
+      "depto": "GERENCIA",
+      "filial": "",
+      "turno": "ADM",
+      "gestor": "ANDRÉ BUENO",
+      "missao": "PRO9164 - Courier",
+      "status": "NOT_STARTED",
+      "prog": ""
+    },
+    {
+      "nome": "ALEX KENJI TOYOTANI",
+      "mat": "30169480",
+      "cargo": "GERENTE DE OPERACOES I",
+      "depto": "GERENCIA",
+      "filial": "",
+      "turno": "ADM",
+      "gestor": "ANDRÉ BUENO",
+      "missao": "PRO9207 - Estacionamento e Gestão de Docas - GRU",
       "status": "NOT_STARTED",
       "prog": ""
     },
