@@ -1,11 +1,11 @@
 // =============================================================
 // dados.js — Gerado por gerar_dados_dash.py
-// Atualizado em: 16/06/2026 10:01
+// Atualizado em: 16/06/2026 11:01
 // NÃO EDITE — execute: python gerar_dados_dash.py
 // =============================================================
 
 const DADOS = {
-  "updated_at": "16/06/2026 10:01",
+  "updated_at": "16/06/2026 11:01",
   "total_ativos": 859,
   "total": 30,
   "concluidos": 27,
@@ -1370,14 +1370,14 @@ const DADOS = {
       },
       {
         "pos": 2,
-        "nome": "PROGRAMA DE CONFORMIDADE",
-        "pct": 31.8,
+        "nome": "ASSÉDIO SEXUAL? NÃO!",
+        "pct": 31.7,
         "cor": "#dc2626"
       },
       {
         "pos": 3,
-        "nome": "ASSÉDIO SEXUAL? NÃO!",
-        "pct": 31.6,
+        "nome": "PROGRAMA DE CONFORMIDADE",
+        "pct": 31.7,
         "cor": "#dc2626"
       },
       {
@@ -1401,7 +1401,7 @@ const DADOS = {
       {
         "pos": 7,
         "nome": "Direção Preventiva",
-        "pct": 18.1,
+        "pct": 18.3,
         "cor": "#dc2626"
       }
     ],
@@ -1416,28 +1416,28 @@ const DADOS = {
         "cor": "#dc2626"
       },
       {
-        "missao": "PROGRAMA DE CONFORMIDADE",
-        "total": 866,
+        "missao": "ASSÉDIO SEXUAL? NÃO!",
+        "total": 867,
         "concluidos": 275,
-        "pendentes": 591,
-        "pct": 31.8,
+        "pendentes": 592,
+        "pct": 31.7,
         "bg": "#fef2f2",
         "cor": "#dc2626"
       },
       {
-        "missao": "ASSÉDIO SEXUAL? NÃO!",
-        "total": 866,
-        "concluidos": 274,
+        "missao": "PROGRAMA DE CONFORMIDADE",
+        "total": 867,
+        "concluidos": 275,
         "pendentes": 592,
-        "pct": 31.6,
+        "pct": 31.7,
         "bg": "#fef2f2",
         "cor": "#dc2626"
       },
       {
         "missao": "#TRILHA DE INTEGRIDADE",
-        "total": 867,
+        "total": 866,
         "concluidos": 267,
-        "pendentes": 600,
+        "pendentes": 599,
         "pct": 30.8,
         "bg": "#fef2f2",
         "cor": "#dc2626"
@@ -1462,10 +1462,10 @@ const DADOS = {
       },
       {
         "missao": "Direção Preventiva",
-        "total": 127,
+        "total": 126,
         "concluidos": 23,
-        "pendentes": 104,
-        "pct": 18.1,
+        "pendentes": 103,
+        "pct": 18.3,
         "bg": "#fef2f2",
         "cor": "#dc2626"
       }
@@ -1481,12 +1481,12 @@ const DADOS = {
         "ASSÉDIO MORAL? ATITUDE PROIBIDA!"
       ],
       "values": [
-        104,
+        103,
         166,
         685,
-        600,
+        599,
         592,
-        591,
+        592,
         583
       ]
     },
@@ -1496,21 +1496,21 @@ const DADOS = {
       "Não Iniciados"
     ],
     "donut_values": [
-      1346,
-      3158,
+      1347,
+      3157,
       163
     ],
     "maior_nome": "ASSÉDIO MORAL? ATITUDE PROIBIDA!",
     "maior_pct": 32.7,
     "menor_nome": "Direção Preventiva",
-    "menor_pct": 18.1,
+    "menor_pct": 18.3,
     "media_pct": 26.6,
     "total_missoes": 7,
     "total": 4667,
-    "concluidos": 1346,
-    "em_andamento": 3158,
+    "concluidos": 1347,
+    "em_andamento": 3157,
     "nao_iniciado": 163,
-    "pct": 28.8
+    "pct": 28.9
   },
   "colaboradores_pendentes": [
     {
@@ -1557,7 +1557,7 @@ const DADOS = {
       "filial": "JSL GRU AERO",
       "turno": "CHARLIE",
       "gestor": "GABRIEL CAMARGO DE SOUZA",
-      "missao": "PRO9199 - ENTREGA, CONTROLE E UTILIZAÇÃO DE EPI - GRU",
+      "missao": "PRO9214 - GERENCIAMENTO DE RESIDUOS - GRU",
       "status": "NOT_STARTED",
       "prog": ""
     },
@@ -1569,103 +1569,7 @@ const DADOS = {
       "filial": "JSL GRU AERO",
       "turno": "CHARLIE",
       "gestor": "GABRIEL CAMARGO DE SOUZA",
-      "missao": "PRO9214 - GERENCIAMENTO DE RESIDUOS - GRU",
-      "status": "NOT_STARTED",
-      "prog": ""
-    },
-    {
-      "nome": "ALEX KENJI TOYOTANI",
-      "mat": "30169480",
-      "cargo": "GERENTE DE OPERACOES I",
-      "depto": "GERENCIA",
-      "filial": "",
-      "turno": "ADM",
-      "gestor": "ANDRÉ BUENO",
-      "missao": "IST1554 - Estacionamento",
-      "status": "NOT_STARTED",
-      "prog": ""
-    },
-    {
-      "nome": "ALEX KENJI TOYOTANI",
-      "mat": "30169480",
-      "cargo": "GERENTE DE OPERACOES I",
-      "depto": "GERENCIA",
-      "filial": "",
-      "turno": "ADM",
-      "gestor": "ANDRÉ BUENO",
-      "missao": "PRO9214 - GERENCIAMENTO DE RESIDUOS - GRU",
-      "status": "NOT_STARTED",
-      "prog": ""
-    },
-    {
-      "nome": "ALEX KENJI TOYOTANI",
-      "mat": "30169480",
-      "cargo": "GERENTE DE OPERACOES I",
-      "depto": "GERENCIA",
-      "filial": "",
-      "turno": "ADM",
-      "gestor": "ANDRÉ BUENO",
-      "missao": "PRO9209 - EXPEDIÇÃO DE IMPORTAÇÃO",
-      "status": "NOT_STARTED",
-      "prog": ""
-    },
-    {
-      "nome": "ALEX KENJI TOYOTANI",
-      "mat": "30169480",
-      "cargo": "GERENTE DE OPERACOES I",
-      "depto": "GERENCIA",
-      "filial": "",
-      "turno": "ADM",
-      "gestor": "ANDRÉ BUENO",
-      "missao": "PRO-GRU0010 - CONTROLE DE MUDANÇA",
-      "status": "NOT_STARTED",
-      "prog": ""
-    },
-    {
-      "nome": "ALEX KENJI TOYOTANI",
-      "mat": "30169480",
-      "cargo": "GERENTE DE OPERACOES I",
-      "depto": "GERENCIA",
-      "filial": "",
-      "turno": "ADM",
-      "gestor": "ANDRÉ BUENO",
-      "missao": "PRO9215 - PLANO DE ATENDIMENTO DE EMERGÊNCIA - GRU",
-      "status": "NOT_STARTED",
-      "prog": ""
-    },
-    {
-      "nome": "ALEX KENJI TOYOTANI",
-      "mat": "30169480",
-      "cargo": "GERENTE DE OPERACOES I",
-      "depto": "GERENCIA",
-      "filial": "",
-      "turno": "ADM",
-      "gestor": "ANDRÉ BUENO",
-      "missao": "IST1553 - Gestão de Docas",
-      "status": "NOT_STARTED",
-      "prog": ""
-    },
-    {
-      "nome": "ALEX KENJI TOYOTANI",
-      "mat": "30169480",
-      "cargo": "GERENTE DE OPERACOES I",
-      "depto": "GERENCIA",
-      "filial": "",
-      "turno": "ADM",
-      "gestor": "ANDRÉ BUENO",
-      "missao": "IST1558 - Amarração de ULD - Lâmina Palete Aéreo - GRU",
-      "status": "NOT_STARTED",
-      "prog": ""
-    },
-    {
-      "nome": "ALEX KENJI TOYOTANI",
-      "mat": "30169480",
-      "cargo": "GERENTE DE OPERACOES I",
-      "depto": "GERENCIA",
-      "filial": "",
-      "turno": "ADM",
-      "gestor": "ANDRÉ BUENO",
-      "missao": "PRO9201 - CLASSIFICAÇÃO E IDENTIFICAÇÃO DE ACIDENTES E INCIDENTES - GRU",
+      "missao": "PRO9199 - ENTREGA, CONTROLE E UTILIZAÇÃO DE EPI - GRU",
       "status": "NOT_STARTED",
       "prog": ""
     },
@@ -1689,31 +1593,7 @@ const DADOS = {
       "filial": "",
       "turno": "ADM",
       "gestor": "ANDRÉ BUENO",
-      "missao": "PRO-GRU0005 - AUDITORIA INTERNA E AUTO INSPEÇÃO",
-      "status": "NOT_STARTED",
-      "prog": ""
-    },
-    {
-      "nome": "ALEX KENJI TOYOTANI",
-      "mat": "30169480",
-      "cargo": "GERENTE DE OPERACOES I",
-      "depto": "GERENCIA",
-      "filial": "",
-      "turno": "ADM",
-      "gestor": "ANDRÉ BUENO",
-      "missao": "PRO9199 - ENTREGA, CONTROLE E UTILIZAÇÃO DE EPI - GRU",
-      "status": "NOT_STARTED",
-      "prog": ""
-    },
-    {
-      "nome": "ALEX KENJI TOYOTANI",
-      "mat": "30169480",
-      "cargo": "GERENTE DE OPERACOES I",
-      "depto": "GERENCIA",
-      "filial": "",
-      "turno": "ADM",
-      "gestor": "ANDRÉ BUENO",
-      "missao": "PRO-GRU0003 - NÃO CONFORMIDADE E AÇÃO CORRETIVA",
+      "missao": "PRO9215 - PLANO DE ATENDIMENTO DE EMERGÊNCIA - GRU",
       "status": "NOT_STARTED",
       "prog": ""
     },
@@ -1726,6 +1606,30 @@ const DADOS = {
       "turno": "ADM",
       "gestor": "ANDRÉ BUENO",
       "missao": "Mapeamento de Processos - JSL",
+      "status": "NOT_STARTED",
+      "prog": ""
+    },
+    {
+      "nome": "ALEX KENJI TOYOTANI",
+      "mat": "30169480",
+      "cargo": "GERENTE DE OPERACOES I",
+      "depto": "GERENCIA",
+      "filial": "",
+      "turno": "ADM",
+      "gestor": "ANDRÉ BUENO",
+      "missao": "PRO9214 - GERENCIAMENTO DE RESIDUOS - GRU",
+      "status": "NOT_STARTED",
+      "prog": ""
+    },
+    {
+      "nome": "ALEX KENJI TOYOTANI",
+      "mat": "30169480",
+      "cargo": "GERENTE DE OPERACOES I",
+      "depto": "GERENCIA",
+      "filial": "",
+      "turno": "ADM",
+      "gestor": "ANDRÉ BUENO",
+      "missao": "PRO9202 - CONTROLE DE CARGAS PERIGOSAS - GRU",
       "status": "NOT_STARTED",
       "prog": ""
     },
@@ -1761,7 +1665,79 @@ const DADOS = {
       "filial": "",
       "turno": "ADM",
       "gestor": "ANDRÉ BUENO",
-      "missao": "PRO9202 - CONTROLE DE CARGAS PERIGOSAS - GRU",
+      "missao": "PRO-GRU0010 - CONTROLE DE MUDANÇA",
+      "status": "NOT_STARTED",
+      "prog": ""
+    },
+    {
+      "nome": "ALEX KENJI TOYOTANI",
+      "mat": "30169480",
+      "cargo": "GERENTE DE OPERACOES I",
+      "depto": "GERENCIA",
+      "filial": "",
+      "turno": "ADM",
+      "gestor": "ANDRÉ BUENO",
+      "missao": "IST1554 - Estacionamento",
+      "status": "NOT_STARTED",
+      "prog": ""
+    },
+    {
+      "nome": "ALEX KENJI TOYOTANI",
+      "mat": "30169480",
+      "cargo": "GERENTE DE OPERACOES I",
+      "depto": "GERENCIA",
+      "filial": "",
+      "turno": "ADM",
+      "gestor": "ANDRÉ BUENO",
+      "missao": "PRO9199 - ENTREGA, CONTROLE E UTILIZAÇÃO DE EPI - GRU",
+      "status": "NOT_STARTED",
+      "prog": ""
+    },
+    {
+      "nome": "ALEX KENJI TOYOTANI",
+      "mat": "30169480",
+      "cargo": "GERENTE DE OPERACOES I",
+      "depto": "GERENCIA",
+      "filial": "",
+      "turno": "ADM",
+      "gestor": "ANDRÉ BUENO",
+      "missao": "IST1553 - Gestão de Docas",
+      "status": "NOT_STARTED",
+      "prog": ""
+    },
+    {
+      "nome": "ALEX KENJI TOYOTANI",
+      "mat": "30169480",
+      "cargo": "GERENTE DE OPERACOES I",
+      "depto": "GERENCIA",
+      "filial": "",
+      "turno": "ADM",
+      "gestor": "ANDRÉ BUENO",
+      "missao": "PRO-GRU0005 - AUDITORIA INTERNA E AUTO INSPEÇÃO",
+      "status": "NOT_STARTED",
+      "prog": ""
+    },
+    {
+      "nome": "ALEX KENJI TOYOTANI",
+      "mat": "30169480",
+      "cargo": "GERENTE DE OPERACOES I",
+      "depto": "GERENCIA",
+      "filial": "",
+      "turno": "ADM",
+      "gestor": "ANDRÉ BUENO",
+      "missao": "IST1558 - Amarração de ULD - Lâmina Palete Aéreo - GRU",
+      "status": "NOT_STARTED",
+      "prog": ""
+    },
+    {
+      "nome": "ALEX KENJI TOYOTANI",
+      "mat": "30169480",
+      "cargo": "GERENTE DE OPERACOES I",
+      "depto": "GERENCIA",
+      "filial": "",
+      "turno": "ADM",
+      "gestor": "ANDRÉ BUENO",
+      "missao": "PRO-GRU0003 - NÃO CONFORMIDADE E AÇÃO CORRETIVA",
       "status": "NOT_STARTED",
       "prog": ""
     },
@@ -1785,6 +1761,30 @@ const DADOS = {
       "filial": "",
       "turno": "ADM",
       "gestor": "ANDRÉ BUENO",
+      "missao": "PRO9201 - CLASSIFICAÇÃO E IDENTIFICAÇÃO DE ACIDENTES E INCIDENTES - GRU",
+      "status": "NOT_STARTED",
+      "prog": ""
+    },
+    {
+      "nome": "ALEX KENJI TOYOTANI",
+      "mat": "30169480",
+      "cargo": "GERENTE DE OPERACOES I",
+      "depto": "GERENCIA",
+      "filial": "",
+      "turno": "ADM",
+      "gestor": "ANDRÉ BUENO",
+      "missao": "PRO9209 - EXPEDIÇÃO DE IMPORTAÇÃO",
+      "status": "NOT_STARTED",
+      "prog": ""
+    },
+    {
+      "nome": "ALEX KENJI TOYOTANI",
+      "mat": "30169480",
+      "cargo": "GERENTE DE OPERACOES I",
+      "depto": "GERENCIA",
+      "filial": "",
+      "turno": "ADM",
+      "gestor": "ANDRÉ BUENO",
       "missao": "PRO9164 - Courier",
       "status": "NOT_STARTED",
       "prog": ""
@@ -1797,7 +1797,7 @@ const DADOS = {
       "filial": "",
       "turno": "ADM",
       "gestor": "ANDRÉ BUENO",
-      "missao": "PRO9207 - Estacionamento e Gestão de Docas - GRU",
+      "missao": "IST1556 - MOVIMENTAÇÃO DE CARGAS PERIGOSAS - IMPORTAÇÃO E EXPORTAÇÃO - GRU",
       "status": "NOT_STARTED",
       "prog": ""
     },
@@ -1809,7 +1809,7 @@ const DADOS = {
       "filial": "",
       "turno": "ADM",
       "gestor": "ANDRÉ BUENO",
-      "missao": "IST1556 - MOVIMENTAÇÃO DE CARGAS PERIGOSAS - IMPORTAÇÃO E EXPORTAÇÃO - GRU",
+      "missao": "PRO9207 - Estacionamento e Gestão de Docas - GRU",
       "status": "NOT_STARTED",
       "prog": ""
     },
