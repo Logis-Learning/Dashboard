@@ -1,28 +1,28 @@
 // =============================================================
 // dados.js — Gerado por gerar_dados_dash.py
-// Atualizado em: 17/06/2026 17:01
+// Atualizado em: 18/06/2026 09:09
 // NÃO EDITE — execute: python gerar_dados_dash.py
 // =============================================================
 
 const DADOS = {
-  "updated_at": "17/06/2026 17:01",
-  "total_ativos": 851,
-  "total": 30,
-  "concluidos": 27,
+  "updated_at": "18/06/2026 09:09",
+  "total_ativos": 853,
+  "total": 29,
+  "concluidos": 26,
   "em_andamento": 2,
   "nao_iniciado": 1,
   "nao_mat": 0,
   "cancelados": 0,
   "pendentes": 3,
-  "pct": 3.2,
-  "minutos": 11790,
+  "pct": 3.0,
+  "minutos": 11430,
   "status_labels": [
     "COMPLETED",
     "IN_PROGRESS",
     "NOT_STARTED"
   ],
   "status_values": [
-    27,
+    26,
     2,
     1
   ],
@@ -31,7 +31,7 @@ const DADOS = {
       "JSL GRU AERO"
     ],
     "concluidos": [
-      213
+      203
     ],
     "pendentes": [
       5
@@ -46,7 +46,7 @@ const DADOS = {
     ],
     "values": [
       100.0,
-      98.6,
+      98.4,
       92.3,
       77.1
     ]
@@ -164,31 +164,31 @@ const DADOS = {
       {
         "pos": 15,
         "nome": "PRO9215 - PLANO DE ATENDIMENTO DE EMERGÊNCIA - GRU",
-        "pct": 93.3,
+        "pct": 93.1,
         "cor": "#16a34a"
       },
       {
         "pos": 16,
         "nome": "PRO9214 - GERENCIAMENTO DE RESIDUOS - GRU",
-        "pct": 93.3,
+        "pct": 93.1,
         "cor": "#16a34a"
       },
       {
         "pos": 17,
         "nome": "PRO9199 - ENTREGA, CONTROLE E UTILIZAÇÃO DE EPI - GRU",
-        "pct": 93.3,
+        "pct": 93.1,
         "cor": "#16a34a"
       },
       {
         "pos": 18,
         "nome": "PRO9201 - CLASSIFICAÇÃO E IDENTIFICAÇÃO DE ACIDENTES E INCIDENTES - GRU",
-        "pct": 93.3,
+        "pct": 93.1,
         "cor": "#16a34a"
       },
       {
         "pos": 19,
         "nome": "M0154 - Manual da Qualidade - BPA E Distribuição de Cargas - GRU",
-        "pct": 93.3,
+        "pct": 93.1,
         "cor": "#16a34a"
       },
       {
@@ -333,8 +333,8 @@ const DADOS = {
       },
       {
         "missao": "IST1490 - Linha Saúde - GRU",
-        "total": 14,
-        "concluidos": 14,
+        "total": 13,
+        "concluidos": 13,
         "pendentes": 0,
         "pct": 100.0,
         "bg": "#f0fdf4",
@@ -342,8 +342,8 @@ const DADOS = {
       },
       {
         "missao": "IST1502 - Inspeção e Serviços - GRU",
-        "total": 5,
-        "concluidos": 5,
+        "total": 4,
+        "concluidos": 4,
         "pendentes": 0,
         "pct": 100.0,
         "bg": "#f0fdf4",
@@ -351,8 +351,8 @@ const DADOS = {
       },
       {
         "missao": "IST1503 - MOVIMENTAÇÃO MANUAL DE CARGAS - GRU",
-        "total": 13,
-        "concluidos": 13,
+        "total": 12,
+        "concluidos": 12,
         "pendentes": 0,
         "pct": 100.0,
         "bg": "#f0fdf4",
@@ -378,8 +378,8 @@ const DADOS = {
       },
       {
         "missao": "PRO9156 - ARMAZENAGEM NA IMPORTAÇÃO - GRU",
-        "total": 9,
-        "concluidos": 9,
+        "total": 8,
+        "concluidos": 8,
         "pendentes": 0,
         "pct": 100.0,
         "bg": "#f0fdf4",
@@ -387,8 +387,8 @@ const DADOS = {
       },
       {
         "missao": "PRO9206 - Boas Práticas de Documentação - GRU",
-        "total": 30,
-        "concluidos": 30,
+        "total": 29,
+        "concluidos": 29,
         "pendentes": 0,
         "pct": 100.0,
         "bg": "#f0fdf4",
@@ -423,46 +423,46 @@ const DADOS = {
       },
       {
         "missao": "PRO9215 - PLANO DE ATENDIMENTO DE EMERGÊNCIA - GRU",
-        "total": 30,
-        "concluidos": 28,
+        "total": 29,
+        "concluidos": 27,
         "pendentes": 2,
-        "pct": 93.3,
+        "pct": 93.1,
         "bg": "#f0fdf4",
         "cor": "#16a34a"
       },
       {
         "missao": "PRO9214 - GERENCIAMENTO DE RESIDUOS - GRU",
-        "total": 30,
-        "concluidos": 28,
+        "total": 29,
+        "concluidos": 27,
         "pendentes": 2,
-        "pct": 93.3,
+        "pct": 93.1,
         "bg": "#f0fdf4",
         "cor": "#16a34a"
       },
       {
         "missao": "PRO9199 - ENTREGA, CONTROLE E UTILIZAÇÃO DE EPI - GRU",
-        "total": 30,
-        "concluidos": 28,
+        "total": 29,
+        "concluidos": 27,
         "pendentes": 2,
-        "pct": 93.3,
+        "pct": 93.1,
         "bg": "#f0fdf4",
         "cor": "#16a34a"
       },
       {
         "missao": "PRO9201 - CLASSIFICAÇÃO E IDENTIFICAÇÃO DE ACIDENTES E INCIDENTES - GRU",
-        "total": 30,
-        "concluidos": 28,
+        "total": 29,
+        "concluidos": 27,
         "pendentes": 2,
-        "pct": 93.3,
+        "pct": 93.1,
         "bg": "#f0fdf4",
         "cor": "#16a34a"
       },
       {
         "missao": "M0154 - Manual da Qualidade - BPA E Distribuição de Cargas - GRU",
-        "total": 30,
-        "concluidos": 28,
+        "total": 29,
+        "concluidos": 27,
         "pendentes": 2,
-        "pct": 93.3,
+        "pct": 93.1,
         "bg": "#f0fdf4",
         "cor": "#16a34a"
       },
@@ -704,7 +704,7 @@ const DADOS = {
       "Não Matriculados"
     ],
     "donut_values": [
-      27,
+      26,
       2,
       0
     ],
@@ -804,31 +804,31 @@ const DADOS = {
       {
         "pos": 15,
         "nome": "PRO9215 - PLANO DE ATENDIMENTO DE EMERGÊNCIA - GRU",
-        "pct": 93.3,
+        "pct": 93.1,
         "cor": "#16a34a"
       },
       {
         "pos": 16,
         "nome": "PRO9214 - GERENCIAMENTO DE RESIDUOS - GRU",
-        "pct": 93.3,
+        "pct": 93.1,
         "cor": "#16a34a"
       },
       {
         "pos": 17,
         "nome": "PRO9199 - ENTREGA, CONTROLE E UTILIZAÇÃO DE EPI - GRU",
-        "pct": 93.3,
+        "pct": 93.1,
         "cor": "#16a34a"
       },
       {
         "pos": 18,
         "nome": "PRO9201 - CLASSIFICAÇÃO E IDENTIFICAÇÃO DE ACIDENTES E INCIDENTES - GRU",
-        "pct": 93.3,
+        "pct": 93.1,
         "cor": "#16a34a"
       },
       {
         "pos": 19,
         "nome": "M0154 - Manual da Qualidade - BPA E Distribuição de Cargas - GRU",
-        "pct": 93.3,
+        "pct": 93.1,
         "cor": "#16a34a"
       },
       {
@@ -973,8 +973,8 @@ const DADOS = {
       },
       {
         "missao": "IST1490 - Linha Saúde - GRU",
-        "total": 14,
-        "concluidos": 14,
+        "total": 13,
+        "concluidos": 13,
         "pendentes": 0,
         "pct": 100.0,
         "bg": "#f0fdf4",
@@ -982,8 +982,8 @@ const DADOS = {
       },
       {
         "missao": "IST1502 - Inspeção e Serviços - GRU",
-        "total": 5,
-        "concluidos": 5,
+        "total": 4,
+        "concluidos": 4,
         "pendentes": 0,
         "pct": 100.0,
         "bg": "#f0fdf4",
@@ -991,8 +991,8 @@ const DADOS = {
       },
       {
         "missao": "IST1503 - MOVIMENTAÇÃO MANUAL DE CARGAS - GRU",
-        "total": 13,
-        "concluidos": 13,
+        "total": 12,
+        "concluidos": 12,
         "pendentes": 0,
         "pct": 100.0,
         "bg": "#f0fdf4",
@@ -1018,8 +1018,8 @@ const DADOS = {
       },
       {
         "missao": "PRO9156 - ARMAZENAGEM NA IMPORTAÇÃO - GRU",
-        "total": 9,
-        "concluidos": 9,
+        "total": 8,
+        "concluidos": 8,
         "pendentes": 0,
         "pct": 100.0,
         "bg": "#f0fdf4",
@@ -1027,8 +1027,8 @@ const DADOS = {
       },
       {
         "missao": "PRO9206 - Boas Práticas de Documentação - GRU",
-        "total": 30,
-        "concluidos": 30,
+        "total": 29,
+        "concluidos": 29,
         "pendentes": 0,
         "pct": 100.0,
         "bg": "#f0fdf4",
@@ -1063,46 +1063,46 @@ const DADOS = {
       },
       {
         "missao": "PRO9215 - PLANO DE ATENDIMENTO DE EMERGÊNCIA - GRU",
-        "total": 30,
-        "concluidos": 28,
+        "total": 29,
+        "concluidos": 27,
         "pendentes": 2,
-        "pct": 93.3,
+        "pct": 93.1,
         "bg": "#f0fdf4",
         "cor": "#16a34a"
       },
       {
         "missao": "PRO9214 - GERENCIAMENTO DE RESIDUOS - GRU",
-        "total": 30,
-        "concluidos": 28,
+        "total": 29,
+        "concluidos": 27,
         "pendentes": 2,
-        "pct": 93.3,
+        "pct": 93.1,
         "bg": "#f0fdf4",
         "cor": "#16a34a"
       },
       {
         "missao": "PRO9199 - ENTREGA, CONTROLE E UTILIZAÇÃO DE EPI - GRU",
-        "total": 30,
-        "concluidos": 28,
+        "total": 29,
+        "concluidos": 27,
         "pendentes": 2,
-        "pct": 93.3,
+        "pct": 93.1,
         "bg": "#f0fdf4",
         "cor": "#16a34a"
       },
       {
         "missao": "PRO9201 - CLASSIFICAÇÃO E IDENTIFICAÇÃO DE ACIDENTES E INCIDENTES - GRU",
-        "total": 30,
-        "concluidos": 28,
+        "total": 29,
+        "concluidos": 27,
         "pendentes": 2,
-        "pct": 93.3,
+        "pct": 93.1,
         "bg": "#f0fdf4",
         "cor": "#16a34a"
       },
       {
         "missao": "M0154 - Manual da Qualidade - BPA E Distribuição de Cargas - GRU",
-        "total": 30,
-        "concluidos": 28,
+        "total": 29,
+        "concluidos": 27,
         "pendentes": 2,
-        "pct": 93.3,
+        "pct": 93.1,
         "bg": "#f0fdf4",
         "cor": "#16a34a"
       },
@@ -1344,7 +1344,7 @@ const DADOS = {
       "Não Iniciados"
     ],
     "donut_values": [
-      306,
+      296,
       2,
       25
     ],
@@ -1354,42 +1354,42 @@ const DADOS = {
     "menor_pct": 50.0,
     "media_pct": 85.6,
     "total_missoes": 36,
-    "total": 333,
-    "concluidos": 306,
+    "total": 323,
+    "concluidos": 296,
     "em_andamento": 2,
     "nao_iniciado": 25,
-    "pct": 91.9
+    "pct": 91.6
   },
   "missoes_simpar": {
     "ranking": [
       {
         "pos": 1,
         "nome": "ASSÉDIO MORAL? ATITUDE PROIBIDA!",
-        "pct": 32.7,
+        "pct": 32.8,
         "cor": "#dc2626"
       },
       {
         "pos": 2,
         "nome": "ASSÉDIO SEXUAL? NÃO!",
-        "pct": 31.7,
+        "pct": 31.6,
         "cor": "#dc2626"
       },
       {
         "pos": 3,
         "nome": "PROGRAMA DE CONFORMIDADE",
-        "pct": 31.7,
+        "pct": 31.6,
         "cor": "#dc2626"
       },
       {
         "pos": 4,
         "nome": "#TRILHA DE INTEGRIDADE",
-        "pct": 31.0,
+        "pct": 30.8,
         "cor": "#dc2626"
       },
       {
         "pos": 5,
         "nome": "Direção Preventiva",
-        "pct": 24.3,
+        "pct": 24.7,
         "cor": "#dc2626"
       },
       {
@@ -1401,71 +1401,71 @@ const DADOS = {
       {
         "pos": 7,
         "nome": "JSL - JORNADA DE SEGURANÇA DA INFORMAÇÃO",
-        "pct": 20.4,
+        "pct": 20.5,
         "cor": "#dc2626"
       }
     ],
     "tabela": [
       {
         "missao": "ASSÉDIO MORAL? ATITUDE PROIBIDA!",
-        "total": 859,
-        "concluidos": 281,
-        "pendentes": 578,
-        "pct": 32.7,
+        "total": 861,
+        "concluidos": 282,
+        "pendentes": 579,
+        "pct": 32.8,
         "bg": "#fef2f2",
         "cor": "#dc2626"
       },
       {
         "missao": "ASSÉDIO SEXUAL? NÃO!",
-        "total": 858,
+        "total": 860,
         "concluidos": 272,
-        "pendentes": 586,
-        "pct": 31.7,
+        "pendentes": 588,
+        "pct": 31.6,
         "bg": "#fef2f2",
         "cor": "#dc2626"
       },
       {
         "missao": "PROGRAMA DE CONFORMIDADE",
-        "total": 859,
+        "total": 861,
         "concluidos": 272,
-        "pendentes": 587,
-        "pct": 31.7,
+        "pendentes": 589,
+        "pct": 31.6,
         "bg": "#fef2f2",
         "cor": "#dc2626"
       },
       {
         "missao": "#TRILHA DE INTEGRIDADE",
-        "total": 858,
-        "concluidos": 266,
-        "pendentes": 592,
-        "pct": 31.0,
+        "total": 860,
+        "concluidos": 265,
+        "pendentes": 595,
+        "pct": 30.8,
         "bg": "#fef2f2",
         "cor": "#dc2626"
       },
       {
         "missao": "Direção Preventiva",
-        "total": 169,
-        "concluidos": 41,
+        "total": 170,
+        "concluidos": 42,
         "pendentes": 128,
-        "pct": 24.3,
+        "pct": 24.7,
         "bg": "#fef2f2",
         "cor": "#dc2626"
       },
       {
         "missao": "LGPD 2025 - Lei Geral de proteção de dados",
-        "total": 858,
-        "concluidos": 180,
-        "pendentes": 678,
+        "total": 860,
+        "concluidos": 181,
+        "pendentes": 679,
         "pct": 21.0,
         "bg": "#fef2f2",
         "cor": "#dc2626"
       },
       {
         "missao": "JSL - JORNADA DE SEGURANÇA DA INFORMAÇÃO",
-        "total": 206,
+        "total": 205,
         "concluidos": 42,
-        "pendentes": 164,
-        "pct": 20.4,
+        "pendentes": 163,
+        "pct": 20.5,
         "bg": "#fef2f2",
         "cor": "#dc2626"
       }
@@ -1481,13 +1481,13 @@ const DADOS = {
         "ASSÉDIO MORAL? ATITUDE PROIBIDA!"
       ],
       "values": [
-        164,
-        678,
+        163,
+        679,
         128,
-        592,
-        586,
-        587,
-        578
+        595,
+        588,
+        589,
+        579
       ]
     },
     "donut_labels": [
@@ -1496,20 +1496,20 @@ const DADOS = {
       "Não Iniciados"
     ],
     "donut_values": [
-      1354,
-      3152,
-      161
+      1356,
+      3170,
+      151
     ],
     "maior_nome": "ASSÉDIO MORAL? ATITUDE PROIBIDA!",
-    "maior_pct": 32.7,
+    "maior_pct": 32.8,
     "menor_nome": "JSL - JORNADA DE SEGURANÇA DA INFORMAÇÃO",
-    "menor_pct": 20.4,
-    "media_pct": 27.5,
+    "menor_pct": 20.5,
+    "media_pct": 27.6,
     "total_missoes": 7,
-    "total": 4667,
-    "concluidos": 1354,
-    "em_andamento": 3152,
-    "nao_iniciado": 161,
+    "total": 4677,
+    "concluidos": 1356,
+    "em_andamento": 3170,
+    "nao_iniciado": 151,
     "pct": 29.0
   },
   "colaboradores_pendentes": [
@@ -1533,7 +1533,7 @@ const DADOS = {
       "filial": "JSL GRU AERO",
       "turno": "CHARLIE",
       "gestor": "GABRIEL CAMARGO DE SOUZA",
-      "missao": "PRO9199 - ENTREGA, CONTROLE E UTILIZAÇÃO DE EPI - GRU",
+      "missao": "PRO9201 - CLASSIFICAÇÃO E IDENTIFICAÇÃO DE ACIDENTES E INCIDENTES - GRU",
       "status": "NOT_STARTED",
       "prog": ""
     },
@@ -1557,7 +1557,7 @@ const DADOS = {
       "filial": "JSL GRU AERO",
       "turno": "CHARLIE",
       "gestor": "GABRIEL CAMARGO DE SOUZA",
-      "missao": "PRO9201 - CLASSIFICAÇÃO E IDENTIFICAÇÃO DE ACIDENTES E INCIDENTES - GRU",
+      "missao": "PRO9199 - ENTREGA, CONTROLE E UTILIZAÇÃO DE EPI - GRU",
       "status": "NOT_STARTED",
       "prog": ""
     },
@@ -1593,7 +1593,7 @@ const DADOS = {
       "filial": "",
       "turno": "ADM",
       "gestor": "ANDRÉ BUENO",
-      "missao": "PRO9209 - EXPEDIÇÃO DE IMPORTAÇÃO",
+      "missao": "IST1554 - Estacionamento",
       "status": "NOT_STARTED",
       "prog": ""
     },
@@ -1617,115 +1617,7 @@ const DADOS = {
       "filial": "",
       "turno": "ADM",
       "gestor": "ANDRÉ BUENO",
-      "missao": "Mapeamento de Processos - JSL",
-      "status": "NOT_STARTED",
-      "prog": ""
-    },
-    {
-      "nome": "ALEX KENJI TOYOTANI",
-      "mat": "30169480",
-      "cargo": "GERENTE DE OPERACOES I",
-      "depto": "GERENCIA",
-      "filial": "",
-      "turno": "ADM",
-      "gestor": "ANDRÉ BUENO",
-      "missao": "PRO9260 - MANUTENÇÃO CORRETIVA E PREVENTIVA DE EQUIPAMENTOS DE MOVIMENTAÇÃO - GRU",
-      "status": "NOT_STARTED",
-      "prog": ""
-    },
-    {
-      "nome": "ALEX KENJI TOYOTANI",
-      "mat": "30169480",
-      "cargo": "GERENTE DE OPERACOES I",
-      "depto": "GERENCIA",
-      "filial": "",
-      "turno": "ADM",
-      "gestor": "ANDRÉ BUENO",
-      "missao": "PRO-GRU0003 - NÃO CONFORMIDADE E AÇÃO CORRETIVA",
-      "status": "NOT_STARTED",
-      "prog": ""
-    },
-    {
-      "nome": "ALEX KENJI TOYOTANI",
-      "mat": "30169480",
-      "cargo": "GERENTE DE OPERACOES I",
-      "depto": "GERENCIA",
-      "filial": "",
-      "turno": "ADM",
-      "gestor": "ANDRÉ BUENO",
-      "missao": "PRO9215 - PLANO DE ATENDIMENTO DE EMERGÊNCIA - GRU",
-      "status": "NOT_STARTED",
-      "prog": ""
-    },
-    {
-      "nome": "ALEX KENJI TOYOTANI",
-      "mat": "30169480",
-      "cargo": "GERENTE DE OPERACOES I",
-      "depto": "GERENCIA",
-      "filial": "",
-      "turno": "ADM",
-      "gestor": "ANDRÉ BUENO",
-      "missao": "IST1585 - DESPALETIZAÇÃO DE VOOS - GRU",
-      "status": "NOT_STARTED",
-      "prog": ""
-    },
-    {
-      "nome": "ALEX KENJI TOYOTANI",
-      "mat": "30169480",
-      "cargo": "GERENTE DE OPERACOES I",
-      "depto": "GERENCIA",
-      "filial": "",
-      "turno": "ADM",
-      "gestor": "ANDRÉ BUENO",
-      "missao": "IST1558 - Amarração de ULD - Lâmina Palete Aéreo - GRU",
-      "status": "NOT_STARTED",
-      "prog": ""
-    },
-    {
-      "nome": "ALEX KENJI TOYOTANI",
-      "mat": "30169480",
-      "cargo": "GERENTE DE OPERACOES I",
-      "depto": "GERENCIA",
-      "filial": "",
-      "turno": "ADM",
-      "gestor": "ANDRÉ BUENO",
-      "missao": "PRO-GRU0005 - AUDITORIA INTERNA E AUTO INSPEÇÃO",
-      "status": "NOT_STARTED",
-      "prog": ""
-    },
-    {
-      "nome": "ALEX KENJI TOYOTANI",
-      "mat": "30169480",
-      "cargo": "GERENTE DE OPERACOES I",
-      "depto": "GERENCIA",
-      "filial": "",
-      "turno": "ADM",
-      "gestor": "ANDRÉ BUENO",
-      "missao": "PRO9199 - ENTREGA, CONTROLE E UTILIZAÇÃO DE EPI - GRU",
-      "status": "NOT_STARTED",
-      "prog": ""
-    },
-    {
-      "nome": "ALEX KENJI TOYOTANI",
-      "mat": "30169480",
-      "cargo": "GERENTE DE OPERACOES I",
-      "depto": "GERENCIA",
-      "filial": "",
-      "turno": "ADM",
-      "gestor": "ANDRÉ BUENO",
-      "missao": "IST1553 - Gestão de Docas",
-      "status": "NOT_STARTED",
-      "prog": ""
-    },
-    {
-      "nome": "ALEX KENJI TOYOTANI",
-      "mat": "30169480",
-      "cargo": "GERENTE DE OPERACOES I",
-      "depto": "GERENCIA",
-      "filial": "",
-      "turno": "ADM",
-      "gestor": "ANDRÉ BUENO",
-      "missao": "PRO9214 - GERENCIAMENTO DE RESIDUOS - GRU",
+      "missao": "PRO9200 - INSPEÇÃO DE EQUIPAMENTOS DE MOVIMENTAÇÃO - GRU",
       "status": "NOT_STARTED",
       "prog": ""
     },
@@ -1749,7 +1641,7 @@ const DADOS = {
       "filial": "",
       "turno": "ADM",
       "gestor": "ANDRÉ BUENO",
-      "missao": "PRO9200 - INSPEÇÃO DE EQUIPAMENTOS DE MOVIMENTAÇÃO - GRU",
+      "missao": "PRO9209 - EXPEDIÇÃO DE IMPORTAÇÃO",
       "status": "NOT_STARTED",
       "prog": ""
     },
@@ -1761,7 +1653,31 @@ const DADOS = {
       "filial": "",
       "turno": "ADM",
       "gestor": "ANDRÉ BUENO",
-      "missao": "IST1554 - Estacionamento",
+      "missao": "Mapeamento de Processos - JSL",
+      "status": "NOT_STARTED",
+      "prog": ""
+    },
+    {
+      "nome": "ALEX KENJI TOYOTANI",
+      "mat": "30169480",
+      "cargo": "GERENTE DE OPERACOES I",
+      "depto": "GERENCIA",
+      "filial": "",
+      "turno": "ADM",
+      "gestor": "ANDRÉ BUENO",
+      "missao": "PRO9199 - ENTREGA, CONTROLE E UTILIZAÇÃO DE EPI - GRU",
+      "status": "NOT_STARTED",
+      "prog": ""
+    },
+    {
+      "nome": "ALEX KENJI TOYOTANI",
+      "mat": "30169480",
+      "cargo": "GERENTE DE OPERACOES I",
+      "depto": "GERENCIA",
+      "filial": "",
+      "turno": "ADM",
+      "gestor": "ANDRÉ BUENO",
+      "missao": "PRO9260 - MANUTENÇÃO CORRETIVA E PREVENTIVA DE EQUIPAMENTOS DE MOVIMENTAÇÃO - GRU",
       "status": "NOT_STARTED",
       "prog": ""
     },
@@ -1785,7 +1701,79 @@ const DADOS = {
       "filial": "",
       "turno": "ADM",
       "gestor": "ANDRÉ BUENO",
+      "missao": "PRO-GRU0005 - AUDITORIA INTERNA E AUTO INSPEÇÃO",
+      "status": "NOT_STARTED",
+      "prog": ""
+    },
+    {
+      "nome": "ALEX KENJI TOYOTANI",
+      "mat": "30169480",
+      "cargo": "GERENTE DE OPERACOES I",
+      "depto": "GERENCIA",
+      "filial": "",
+      "turno": "ADM",
+      "gestor": "ANDRÉ BUENO",
+      "missao": "PRO9215 - PLANO DE ATENDIMENTO DE EMERGÊNCIA - GRU",
+      "status": "NOT_STARTED",
+      "prog": ""
+    },
+    {
+      "nome": "ALEX KENJI TOYOTANI",
+      "mat": "30169480",
+      "cargo": "GERENTE DE OPERACOES I",
+      "depto": "GERENCIA",
+      "filial": "",
+      "turno": "ADM",
+      "gestor": "ANDRÉ BUENO",
+      "missao": "PRO9214 - GERENCIAMENTO DE RESIDUOS - GRU",
+      "status": "NOT_STARTED",
+      "prog": ""
+    },
+    {
+      "nome": "ALEX KENJI TOYOTANI",
+      "mat": "30169480",
+      "cargo": "GERENTE DE OPERACOES I",
+      "depto": "GERENCIA",
+      "filial": "",
+      "turno": "ADM",
+      "gestor": "ANDRÉ BUENO",
+      "missao": "PRO9157 - INVENTÁRIO",
+      "status": "NOT_STARTED",
+      "prog": ""
+    },
+    {
+      "nome": "ALEX KENJI TOYOTANI",
+      "mat": "30169480",
+      "cargo": "GERENTE DE OPERACOES I",
+      "depto": "GERENCIA",
+      "filial": "",
+      "turno": "ADM",
+      "gestor": "ANDRÉ BUENO",
       "missao": "PRO9207 - Estacionamento e Gestão de Docas - GRU",
+      "status": "NOT_STARTED",
+      "prog": ""
+    },
+    {
+      "nome": "ALEX KENJI TOYOTANI",
+      "mat": "30169480",
+      "cargo": "GERENTE DE OPERACOES I",
+      "depto": "GERENCIA",
+      "filial": "",
+      "turno": "ADM",
+      "gestor": "ANDRÉ BUENO",
+      "missao": "IST1558 - Amarração de ULD - Lâmina Palete Aéreo - GRU",
+      "status": "NOT_STARTED",
+      "prog": ""
+    },
+    {
+      "nome": "ALEX KENJI TOYOTANI",
+      "mat": "30169480",
+      "cargo": "GERENTE DE OPERACOES I",
+      "depto": "GERENCIA",
+      "filial": "",
+      "turno": "ADM",
+      "gestor": "ANDRÉ BUENO",
+      "missao": "PRO-GRU0003 - NÃO CONFORMIDADE E AÇÃO CORRETIVA",
       "status": "NOT_STARTED",
       "prog": ""
     },
@@ -1809,18 +1797,6 @@ const DADOS = {
       "filial": "",
       "turno": "ADM",
       "gestor": "ANDRÉ BUENO",
-      "missao": "M0154 - Manual da Qualidade - BPA E Distribuição de Cargas - GRU",
-      "status": "IN_PROGRESS",
-      "prog": "25"
-    },
-    {
-      "nome": "ALEX KENJI TOYOTANI",
-      "mat": "30169480",
-      "cargo": "GERENTE DE OPERACOES I",
-      "depto": "GERENCIA",
-      "filial": "",
-      "turno": "ADM",
-      "gestor": "ANDRÉ BUENO",
       "missao": "PRO9164 - Courier",
       "status": "NOT_STARTED",
       "prog": ""
@@ -1833,9 +1809,33 @@ const DADOS = {
       "filial": "",
       "turno": "ADM",
       "gestor": "ANDRÉ BUENO",
-      "missao": "PRO9157 - INVENTÁRIO",
+      "missao": "IST1585 - DESPALETIZAÇÃO DE VOOS - GRU",
       "status": "NOT_STARTED",
       "prog": ""
+    },
+    {
+      "nome": "ALEX KENJI TOYOTANI",
+      "mat": "30169480",
+      "cargo": "GERENTE DE OPERACOES I",
+      "depto": "GERENCIA",
+      "filial": "",
+      "turno": "ADM",
+      "gestor": "ANDRÉ BUENO",
+      "missao": "IST1553 - Gestão de Docas",
+      "status": "NOT_STARTED",
+      "prog": ""
+    },
+    {
+      "nome": "ALEX KENJI TOYOTANI",
+      "mat": "30169480",
+      "cargo": "GERENTE DE OPERACOES I",
+      "depto": "GERENCIA",
+      "filial": "",
+      "turno": "ADM",
+      "gestor": "ANDRÉ BUENO",
+      "missao": "M0154 - Manual da Qualidade - BPA E Distribuição de Cargas - GRU",
+      "status": "IN_PROGRESS",
+      "prog": "25"
     }
   ],
   "setor_donut": {
